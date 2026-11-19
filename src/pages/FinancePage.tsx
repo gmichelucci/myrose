@@ -88,12 +88,14 @@ export default function FinancePage() {
   const handleExportPdf = () => {
     const win = window.open('', '_blank', 'width=840,height=700');
     if (!win) return;
+    const esc = (s: string) =>
+      s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] ?? c));
     const realized = workspace.appointments.filter((a) => a.status === 'realizado');
     win.document.write(`<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <title>Relatório Financeiro — ${workspace.studio.business_name}</title>
+  <title>Relatório Financeiro — ${esc(workspace.studio.business_name)}</title>
   <style>
     body { font-family: system-ui, -apple-system, sans-serif; padding: 32px; color: #09090b; }
     h1 { font-size: 22px; margin-bottom: 4px; }
@@ -108,7 +110,7 @@ export default function FinancePage() {
   </style>
 </head>
 <body>
-  <h1>${workspace.studio.business_name} — Relatório Financeiro MyRose</h1>
+  <h1>${esc(workspace.studio.business_name)} — Relatório Financeiro MyRose</h1>
   <p class="sub">Emitido em ${new Date().toLocaleDateString('pt-BR')}</p>
   <div class="kpis">
     <div class="kpi"><span>Receita Realizada</span><strong style="color:#059669">${formatCurrencyBRL(summary.revenueCents)}</strong></div>
@@ -119,14 +121,14 @@ export default function FinancePage() {
   <table>
     <thead><tr><th>Data</th><th>Cliente</th><th>Procedimento</th><th>Valor</th></tr></thead>
     <tbody>
-      ${realized.map((a) => `<tr><td>${a.appointment_date.split('-').reverse().join('/')}</td><td>${a.client_name}</td><td>${a.items?.map((i) => i.subservice_name).join(', ') || 'Atendimento'}</td><td>${formatCurrencyBRL(a.total_cents)}</td></tr>`).join('')}
+      ${realized.map((a) => `<tr><td>${esc(a.appointment_date.split('-').reverse().join('/'))}</td><td>${esc(a.client_name)}</td><td>${esc(a.items?.map((i) => i.subservice_name).join(', ') || 'Atendimento')}</td><td>${formatCurrencyBRL(a.total_cents)}</td></tr>`).join('')}
     </tbody>
   </table>
   <h3>Despesas (${workspace.expenses.length})</h3>
   <table>
     <thead><tr><th>Data</th><th>Categoria</th><th>Descrição</th><th>Valor</th></tr></thead>
     <tbody>
-      ${workspace.expenses.map((ex) => `<tr><td>${ex.expense_date.split('-').reverse().join('/')}</td><td>${ex.category}</td><td>${ex.description}</td><td>-${formatCurrencyBRL(ex.amount_cents)}</td></tr>`).join('')}
+      ${workspace.expenses.map((ex) => `<tr><td>${esc(ex.expense_date.split('-').reverse().join('/'))}</td><td>${esc(ex.category)}</td><td>${esc(ex.description)}</td><td>-${formatCurrencyBRL(ex.amount_cents)}</td></tr>`).join('')}
     </tbody>
   </table>
   <script>window.onload = () => window.print();</script>

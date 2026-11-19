@@ -21,6 +21,8 @@ Iniciar-WhatsApp-MyRose.cmd
 public/hellrose-logo.jpeg
 whatsapp_service/node_modules/
 whatsapp_service/auth_info_baileys/
+builds/
+graphify-out/
 
 # Certificados / Keystores (Android Play Store / TWA)
 *.jks
