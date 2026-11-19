@@ -176,7 +176,7 @@ export default function LashMappingPage() {
       <div className="space-y-3 rounded-2xl border border-zinc-200 bg-gradient-to-r from-zinc-50 to-red-50/50 p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="flex items-center gap-1.5 text-xs font-bold text-red-800">
-            <Sparkles className="h-4 w-4" /> IA da Beleza & Visagismo (8 áreas + análise com foto no canvas)
+            <Sparkles className="h-4 w-4" /> IA da Beleza & Visagismo (9 áreas + análise com foto no canvas)
           </p>
           <div className="flex flex-wrap items-center gap-2">
             <select

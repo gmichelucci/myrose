@@ -32,9 +32,15 @@ export default function AutomationsPage() {
 
   useEffect(() => {
     void checkGateway();
+  }, [checkGateway]);
+
+  useEffect(() => {
+    if (waState.status !== 'qr_ready' && waState.status !== 'connecting' && waState.status !== 'connected') {
+      return;
+    }
     const timer = setInterval(() => void checkGateway(), 6000);
     return () => clearInterval(timer);
-  }, [checkGateway]);
+  }, [checkGateway, waState.status]);
 
   if (!workspace) return null;
   const plan = getPlan(workspace.studio.plan_id);

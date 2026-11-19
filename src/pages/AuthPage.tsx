@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 
@@ -21,6 +22,9 @@ export default function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
   const [whatsapp, setWhatsapp] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPass, setShowPass] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
+  const [acceptedTerms, setAcceptedTerms] = useState(true);
   const [err, setErr] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -37,6 +41,9 @@ export default function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
       } else {
         if (ownerName.trim().length < 2 || businessName.trim().length < 2) {
           throw new Error('Informe seu nome e o nome do seu estúdio.');
+        }
+        if (!acceptedTerms) {
+          throw new Error('Confirme que concorda com os termos de uso e política de privacidade.');
         }
         await signUpStudio({ ownerName, businessName, email, password, whatsapp });
         navigate(afterAuthPath);
@@ -83,6 +90,13 @@ export default function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-zinc-50 via-white to-red-50/30 px-4 py-10">
       <div className="w-full max-w-md rounded-2xl border border-zinc-200 bg-white p-7 shadow-sm">
+        <Link
+          to="/"
+          className="mb-3 inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-500 hover:text-red-700"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" /> Voltar para o site
+        </Link>
+
         <div className="text-center">
           <Link to="/" className="inline-flex flex-col items-center gap-2 font-bold">
             <img src="/logo.png" alt="MyRose" className="h-14 w-14 rounded-full object-cover shadow-sm ring-1 ring-zinc-900/15" />
@@ -93,6 +107,11 @@ export default function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
           <h1 className="mt-3 text-xl font-bold text-zinc-950">
             {mode === 'login' ? 'Entrar no seu estúdio' : 'Criar conta gratuita'}
           </h1>
+          {mode === 'signup' && (
+            <p className="mt-1 text-xs font-medium text-red-700">
+              Até 5 clientes grátis • Sem cartão de crédito
+            </p>
+          )}
           {isDemoMode && (
             <p className="mt-2 rounded-xl border border-amber-200 bg-amber-50 p-2.5 text-xs text-amber-800">
               Modo Preview Local ativo — clique em entrar para explorar o MyRose sem conectar o `.env`.
@@ -101,29 +120,36 @@ export default function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
         </div>
 
         {mode === 'login' && (
-          <div className="mt-5 grid grid-cols-2 rounded-xl bg-zinc-100 p-1 text-xs font-semibold">
-            <button
-              type="button"
-              onClick={() => setRoleTab('profissional')}
-              className={`rounded-lg py-2 ${roleTab === 'profissional' ? 'bg-white text-red-800 shadow-xs' : 'text-zinc-600'}`}
-            >
-              Profissional
-            </button>
-            <button
-              type="button"
-              onClick={() => setRoleTab('colaboradora')}
-              className={`rounded-lg py-2 ${roleTab === 'colaboradora' ? 'bg-white text-red-800 shadow-xs' : 'text-zinc-600'}`}
-            >
-              Colaboradora
-            </button>
-          </div>
+          <>
+            <div className="mt-5 grid grid-cols-2 rounded-xl bg-zinc-100 p-1 text-xs font-semibold">
+              <button
+                type="button"
+                onClick={() => setRoleTab('profissional')}
+                className={`rounded-lg py-2 ${roleTab === 'profissional' ? 'bg-white text-red-800 shadow-xs' : 'text-zinc-600'}`}
+              >
+                Profissional
+              </button>
+              <button
+                type="button"
+                onClick={() => setRoleTab('colaboradora')}
+                className={`rounded-lg py-2 ${roleTab === 'colaboradora' ? 'bg-white text-red-800 shadow-xs' : 'text-zinc-600'}`}
+              >
+                Colaboradora
+              </button>
+            </div>
+            {roleTab === 'colaboradora' && (
+              <p className="mt-2.5 rounded-xl bg-zinc-50 p-2.5 text-center text-xs text-zinc-600">
+                Acesse como colaboradora da sua profissional — use o e-mail e a senha fornecidos pela responsável do estúdio.
+              </p>
+            )}
+          </>
         )}
 
         <form onSubmit={handleSubmit} className="mt-5 space-y-3.5">
           {mode === 'signup' && (
             <>
               <div>
-                <label className="text-xs font-medium text-zinc-700">Seu nome</label>
+                <label className="text-xs font-medium text-zinc-700">Seu nome completo</label>
                 <input
                   required
                   value={ownerName}
@@ -168,16 +194,57 @@ export default function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
 
           <div>
             <label className="text-xs font-medium text-zinc-700">Senha</label>
-            <input
-              type="password"
-              required={!isDemoMode}
-              minLength={6}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Mínimo 6 caracteres"
-              className="mt-1 w-full rounded-xl border border-zinc-200 px-3.5 py-2.5 text-sm outline-none focus:border-red-700"
-            />
+            <div className="relative mt-1">
+              <input
+                type={showPass ? 'text' : 'password'}
+                required={!isDemoMode}
+                minLength={6}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Mínimo 6 caracteres"
+                className="w-full rounded-xl border border-zinc-200 py-2.5 pl-3.5 pr-10 text-sm outline-none focus:border-red-700"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPass((v) => !v)}
+                className="absolute right-3 top-2.5 text-zinc-400 hover:text-zinc-700"
+                aria-label="Mostrar ou ocultar senha"
+              >
+                {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
           </div>
+
+          {mode === 'login' ? (
+            <div className="flex items-center justify-between text-xs">
+              <label className="flex items-center gap-2 text-zinc-600">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="accent-red-700"
+                />
+                Lembrar de mim
+              </label>
+              <button
+                type="button"
+                onClick={() => void handleForgotPassword()}
+                className="font-medium text-zinc-500 hover:text-red-700 hover:underline"
+              >
+                Esqueci minha senha
+              </button>
+            </div>
+          ) : (
+            <label className="flex items-start gap-2 text-xs text-zinc-600">
+              <input
+                type="checkbox"
+                checked={acceptedTerms}
+                onChange={(e) => setAcceptedTerms(e.target.checked)}
+                className="mt-0.5 accent-red-700"
+              />
+              <span>Concordo com os Termos de Uso e Política de Privacidade do MyRose.</span>
+            </label>
+          )}
 
           {(err || authError) && (
             <p className="rounded-xl bg-red-50 p-3 text-xs text-red-700">{err ?? authError}</p>
@@ -200,15 +267,6 @@ export default function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
           >
             Testar Estúdio Demo (1 clique)
           </button>
-          {mode === 'login' && (
-            <button
-              type="button"
-              onClick={() => void handleForgotPassword()}
-              className="w-full text-center text-xs font-medium text-zinc-500 hover:text-red-700 hover:underline"
-            >
-              Esqueci minha senha
-            </button>
-          )}
         </form>
 
         <p className="mt-5 text-center text-xs text-zinc-600">

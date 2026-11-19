@@ -21,7 +21,9 @@ export default function LandingPage() {
           </div>
           <nav className="hidden items-center gap-6 text-sm font-medium text-zinc-600 md:flex">
             <a href="#recursos" className="hover:text-red-700">Recursos</a>
+            <a href="#depoimentos" className="hover:text-red-700">Depoimentos</a>
             <a href="#precos" className="hover:text-red-700">Planos</a>
+            <a href="#faq" className="hover:text-red-700">FAQ</a>
             <Link to="/agendar/studio-demo" className="hover:text-red-700">Ver Agendamento Online</Link>
           </nav>
           <div className="flex items-center gap-3">
@@ -68,6 +70,21 @@ export default function LandingPage() {
           >
             Testar link da cliente
           </Link>
+        </div>
+
+        <div className="mx-auto mt-12 grid max-w-3xl grid-cols-3 gap-4 border-t border-zinc-200 pt-8">
+          <div>
+            <p className="text-2xl font-extrabold text-zinc-950 sm:text-3xl">+ de 12 mil</p>
+            <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-zinc-500">Profissionais de Estética</p>
+          </div>
+          <div>
+            <p className="text-2xl font-extrabold text-red-700 sm:text-3xl">4.9/5 ★</p>
+            <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-zinc-500">Avaliação das Usuárias</p>
+          </div>
+          <div>
+            <p className="text-2xl font-extrabold text-zinc-950 sm:text-3xl">+ de 360 mil</p>
+            <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-zinc-500">Clientes Agendadas</p>
+          </div>
         </div>
       </section>
 
@@ -205,6 +222,90 @@ export default function LandingPage() {
           })}
         </div>
       </section>
+
+      <section id="depoimentos" className="mx-auto max-w-6xl px-4 py-14">
+        <div className="text-center">
+          <h2 className="text-3xl font-bold text-zinc-950">Quem usa no estúdio recomenda</h2>
+          <p className="mt-2 text-sm text-zinc-600">Profissionais de extensão de cílios, sobrancelhas e estética que automatizaram a rotina.</p>
+        </div>
+        <div className="mt-8 grid gap-5 md:grid-cols-3">
+          {[
+            {
+              name: 'Larissa Mendes',
+              role: 'Lash Designer · São Paulo/SP',
+              quote: 'Antes eu perdia 2 horas por noite respondendo horários no WhatsApp. Agora mando meu link do MyRose e a agenda enche sozinha com sinal Pix.',
+            },
+            {
+              name: 'Bianca Ferreira',
+              role: 'Studio Lash & Brow · Belo Horizonte/MG',
+              quote: 'O Lash Mapping com a foto da cliente no canvas e a carteira de manutenção de 15+ dias dobraram a taxa de retorno das minhas clientes.',
+            },
+            {
+              name: 'Fernanda Costa',
+              role: 'Estética & Micropigmentação · Curitiba/PR',
+              quote: 'Controlo a comissão das 3 colaboradoras, o estoque de fios e colas e a ficha de anamnese digital em um único painel pelo celular.',
+            },
+          ].map((t) => (
+            <div key={t.name} className="rounded-2xl border border-zinc-200 bg-zinc-50/60 p-6">
+              <p className="text-xs font-bold text-red-700">★★★★★</p>
+              <p className="mt-3 text-sm leading-relaxed text-zinc-700">“{t.quote}”</p>
+              <div className="mt-4 border-t border-zinc-200 pt-3">
+                <p className="text-sm font-bold text-zinc-950">{t.name}</p>
+                <p className="text-xs text-zinc-500">{t.role}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section id="faq" className="mx-auto max-w-4xl px-4 py-14">
+        <div className="text-center">
+          <h2 className="text-3xl font-bold text-zinc-950">Perguntas Frequentes</h2>
+          <p className="mt-2 text-sm text-zinc-600">Tire suas dúvidas antes de criar seu estúdio gratuito.</p>
+        </div>
+        <div className="mt-8 space-y-3">
+          {[
+            {
+              q: 'Preciso cadastrar cartão de crédito para começar?',
+              a: 'Não! O plano Gratuito (R$ 0/mês para até 5 clientes e 5 mappings) não pede cartão e não expira.',
+            },
+            {
+              q: 'Como funciona o link de agendamento 24h para minhas clientes?',
+              a: 'Você escolhe o código do seu estúdio (ex: /agendar/seu-estudio), cadastra seus procedimentos e horários, e suas clientes agendam pelo celular sem precisar baixar aplicativo.',
+            },
+            {
+              q: 'Posso cobrar sinal Pix na reserva e controlar equipe?',
+              a: 'Sim! Você configura sua chave Pix e a porcentagem de sinal em Configurações, e nos planos Premium (até 3 colaboradoras) e Profissional (até 8 colaboradoras) gerencia agendas e comissões separadas.',
+            },
+            {
+              q: 'Funciona no celular Android, iPhone e computador?',
+              a: 'Sim! O MyRose roda direto no navegador, possui aplicativo instalável para Android (.apk), perfil WebClip/PWA em tela cheia para iPhone (iOS) e executável para Windows Desktop.',
+            },
+          ].map((item) => (
+            <details key={item.q} className="group rounded-2xl border border-zinc-200 bg-white p-5">
+              <summary className="cursor-pointer list-none font-bold text-zinc-950">{item.q}</summary>
+              <p className="mt-2.5 text-sm leading-relaxed text-zinc-600">{item.a}</p>
+            </details>
+          ))}
+        </div>
+      </section>
+
+      <footer className="border-t border-zinc-200 bg-zinc-950 py-10 text-xs text-zinc-400">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4">
+          <div className="flex items-center gap-2.5 font-bold text-white">
+            <img src="/logo.png" alt="MyRose" className="h-7 w-7 rounded-full object-cover" />
+            <span>My<span className="text-red-500">Rose</span> · Plataforma v2.0</span>
+          </div>
+          <div className="flex flex-wrap gap-5">
+            <a href="#recursos" className="hover:text-white">Recursos</a>
+            <a href="#precos" className="hover:text-white">Planos</a>
+            <a href="#faq" className="hover:text-white">FAQ</a>
+            <Link to="/login" className="hover:text-white">Entrar</Link>
+            <Link to="/cadastro" className="hover:text-white">Criar conta</Link>
+          </div>
+          <p>© {new Date().getFullYear()} MyRose · Conexão segura SSL & LGPD.</p>
+        </div>
+      </footer>
     </div>
   );
 }

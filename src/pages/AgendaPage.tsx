@@ -233,7 +233,12 @@ export default function AgendaPage() {
       </div>
 
       <div className="space-y-2.5">
-        {list.map((a) => {
+        {list.length === 0 ? (
+          <div className="rounded-2xl border border-zinc-200 bg-white p-6 text-center text-sm text-zinc-500">
+            Nenhum atendimento encontrado para o filtro selecionado. Use o formulário acima para agendar ou compartilhe seu link público com as clientes.
+          </div>
+        ) : (
+          list.map((a) => {
           const msg = interpolateTemplate(reminderTpl, {
             cliente: a.client_name.split(' ')[0],
             profissional: workspace.studio.owner_name,
@@ -278,7 +283,8 @@ export default function AgendaPage() {
               </div>
             </div>
           );
-        })}
+        })
+        )}
       </div>
     </div>
   );
