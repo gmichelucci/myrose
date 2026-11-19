@@ -259,6 +259,37 @@ Deno.serve(async (req) => {
       return json({ ok: true });
     }
 
+    if (req.method === 'POST' && action === 'signup') {
+      const body = await req.json();
+      const ownerName = String(body.ownerName ?? '').trim();
+      const businessName = String(body.businessName ?? '').trim();
+      const email = String(body.email ?? '').trim().toLowerCase();
+      const password = String(body.password ?? '');
+      const whatsapp = String(body.whatsapp ?? '').replace(/\D/g, '');
+
+      if (ownerName.length < 2 || businessName.length < 2 || !email.includes('@') || password.length < 6) {
+        return json({ error: 'Preencha nome, estúdio, e-mail válido e senha com no mínimo 6 caracteres.' }, 400);
+      }
+
+      const { data: created, error: createErr } = await db.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: {
+          app: 'myrose',
+          owner_name: ownerName,
+          business_name: businessName,
+          whatsapp,
+        },
+      });
+
+      if (createErr || !created.user) {
+        return json({ error: createErr?.message ?? 'Não foi possível criar a conta.' }, 400);
+      }
+
+      return json({ userId: created.user.id, email: created.user.email }, 201);
+    }
+
     return json({ error: 'Ação desconhecida' }, 404);
   } catch (err) {
     return json({ error: err instanceof Error ? err.message : 'Erro interno' }, 500);

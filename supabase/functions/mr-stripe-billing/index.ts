@@ -28,7 +28,7 @@ function resolveBaseUrl(req: Request, rawOrigin?: string): string {
   } catch {
     // cai no fallback abaixo
   }
-  return 'https://myrose.app';
+  return 'https://myrose-app.pages.dev';
 }
 
 Deno.serve(async (req) => {

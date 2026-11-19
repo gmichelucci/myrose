@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
-import { isSupabaseConfigured, supabase } from '../lib/supabase';
+import { getPublicFunctionUrl, isSupabaseConfigured, supabase } from '../lib/supabase';
 import { loadStudioWorkspace, type StudioWorkspace } from '../services/repository';
 
 interface AuthContextValue {
@@ -163,33 +163,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    const { data, error: signUpErr } = await supabase.auth.signUp({
+    const res = await fetch(getPublicFunctionUrl('signup'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(input),
+    });
+    const payload = (await res.json().catch(() => ({}))) as { error?: string };
+    if (!res.ok) {
+      throw new Error(payload.error ?? 'Não foi possível criar sua conta.');
+    }
+
+    const { error: signInErr } = await supabase.auth.signInWithPassword({
       email: input.email,
       password: input.password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/login`,
-        data: {
-          app: 'myrose',
-          owner_name: input.ownerName,
-          business_name: input.businessName,
-          whatsapp: input.whatsapp ?? '',
-        },
-      },
     });
-    if (signUpErr) throw new Error(signUpErr.message);
+    if (signInErr) throw new Error(signInErr.message);
 
-    if (data.session) {
-      const slug = `${slugify(input.businessName)}-${Math.random().toString(36).slice(2, 6)}`;
-      const { error: rpcErr } = await supabase.rpc('mr_bootstrap_studio', {
-        p_owner_name: input.ownerName,
-        p_business_name: input.businessName,
-        p_email: input.email,
-        p_slug: slug,
-        p_whatsapp: input.whatsapp ?? null,
-      });
-      if (rpcErr) throw new Error(rpcErr.message);
-      await resolveCurrentSession();
-    }
+    await resolveCurrentSession();
   };
 
   const signOut = async () => {

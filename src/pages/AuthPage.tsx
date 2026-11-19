@@ -38,14 +38,24 @@ export default function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
           throw new Error('Informe seu nome e o nome do seu estúdio.');
         }
         await signUpStudio({ ownerName, businessName, email, password, whatsapp });
-        if (isDemoMode) {
-          navigate(afterAuthPath);
-        } else {
-          setNotice('Cadastro criado! Se o projeto exigir confirmação, verifique seu e-mail.');
-        }
+        navigate(afterAuthPath);
       }
     } catch (ex) {
       setErr(ex instanceof Error ? ex.message : 'Não foi possível concluir.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleDemoLogin = async () => {
+    setErr(null);
+    setNotice(null);
+    setBusy(true);
+    try {
+      await signIn('demo@myrose.app', 'MyRoseDemo2026!');
+      navigate('/dashboard');
+    } catch (ex) {
+      setErr(ex instanceof Error ? ex.message : 'Falha ao entrar na conta demo.');
     } finally {
       setBusy(false);
     }
@@ -161,6 +171,15 @@ export default function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
             className="w-full rounded-xl bg-gradient-to-r from-red-700 to-red-900 py-2.5 text-sm font-semibold text-white hover:opacity-95 disabled:opacity-60"
           >
             {busy ? 'Processando...' : mode === 'login' ? 'Entrar' : 'Criar meu estúdio'}
+          </button>
+
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => void handleDemoLogin()}
+            className="w-full rounded-xl border border-zinc-200 bg-zinc-50 py-2.5 text-xs font-semibold text-zinc-800 hover:bg-zinc-100 disabled:opacity-60"
+          >
+            Testar Estúdio Demo (1 clique)
           </button>
         </form>
 
