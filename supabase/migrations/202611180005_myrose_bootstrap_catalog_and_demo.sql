@@ -36,23 +36,6 @@ BEGIN
     ON CONFLICT (studio_id, day_of_week) DO NOTHING;
   END LOOP;
 
-  IF NOT EXISTS (SELECT 1 FROM public.mr_services WHERE studio_id = v_studio.id) THEN
-    INSERT INTO public.mr_services (studio_id, name, active, sort_order)
-    VALUES (v_studio.id, 'Extensão de Cílios', true, 0)
-    RETURNING id INTO v_srv_lash;
-
-    INSERT INTO public.mr_services (studio_id, name, active, sort_order)
-    VALUES (v_studio.id, 'Sobrancelhas', true, 1)
-    RETURNING id INTO v_srv_brow;
-
-    INSERT INTO public.mr_subservices (
-      studio_id, service_id, name, details, price_cents, promo_price_cents, duration_minutes, maintenance_days, active, sort_order
-    ) VALUES
-      (v_studio.id, v_srv_lash, 'Volume Brasileiro', 'Aplicação completa com mapeamento personalizado', 18000, NULL, 90, 20, true, 0),
-      (v_studio.id, v_srv_lash, 'Fio a Fio Clássico', 'Acabamento natural fio a fio', 15000, 13500, 90, 15, true, 1),
-      (v_studio.id, v_srv_brow, 'Brow Lamination', 'Alinhamento e hidratação dos fios', 12000, NULL, 60, 30, true, 2);
-  END IF;
-
   RETURN v_studio;
 END;
 $$;

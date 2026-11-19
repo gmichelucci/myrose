@@ -170,32 +170,43 @@ export default function ClientsPage() {
       )}
 
       <form onSubmit={handleAdd} className="grid gap-3 rounded-2xl border border-zinc-200 bg-white p-5 md:grid-cols-4">
-        <input
-          required
-          placeholder="Nome da cliente"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="rounded-xl border border-zinc-200 px-3 py-2 text-sm"
-        />
-        <input
-          required
-          placeholder="WhatsApp (DDD + número)"
-          value={whatsapp}
-          onChange={(e) => setWhatsapp(e.target.value)}
-          className="rounded-xl border border-zinc-200 px-3 py-2 text-sm"
-        />
-        <input
-          type="date"
-          value={birthDate}
-          onChange={(e) => setBirthDate(e.target.value)}
-          className="rounded-xl border border-zinc-200 px-3 py-2 text-sm"
-        />
-        <button
-          type="submit"
-          className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-red-700 px-4 py-2 text-sm font-semibold text-white hover:bg-red-800"
-        >
-          <Plus className="h-4 w-4" /> Adicionar cliente
-        </button>
+        <div>
+          <label className="mb-1 block text-xs font-semibold text-zinc-700">Nome da cliente</label>
+          <input
+            required
+            placeholder="Ex: Mariana Silva"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm"
+          />
+        </div>
+        <div>
+          <label className="mb-1 block text-xs font-semibold text-zinc-700">WhatsApp (DDD + número)</label>
+          <input
+            required
+            placeholder="Ex: 11999998888"
+            value={whatsapp}
+            onChange={(e) => setWhatsapp(e.target.value)}
+            className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm"
+          />
+        </div>
+        <div>
+          <label className="mb-1 block text-xs font-semibold text-zinc-700">Data de nascimento (opcional)</label>
+          <input
+            type="date"
+            value={birthDate}
+            onChange={(e) => setBirthDate(e.target.value)}
+            className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm"
+          />
+        </div>
+        <div className="flex items-end">
+          <button
+            type="submit"
+            className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-red-700 px-4 py-2 text-sm font-semibold text-white hover:bg-red-800"
+          >
+            <Plus className="h-4 w-4" /> Adicionar cliente
+          </button>
+        </div>
         {err && <p className="text-xs text-red-600 md:col-span-4">{err}</p>}
       </form>
 

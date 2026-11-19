@@ -240,31 +240,46 @@ export default function FinancePage() {
       ) : (
         <div className="space-y-5">
           <form onSubmit={handleAddItem} className="grid gap-3 rounded-2xl border border-zinc-200 bg-white p-5 md:grid-cols-5">
-            <input
-              required
-              placeholder="Produto (ex: Fios Volume Russo)"
-              value={itemName}
-              onChange={(e) => setItemName(e.target.value)}
-              className="rounded-xl border border-zinc-200 px-3 py-2 text-sm md:col-span-2"
-            />
-            <select value={itemCat} onChange={(e) => setItemCat(e.target.value)} className="rounded-xl border border-zinc-200 px-3 py-2 text-sm">
-              {INVENTORY_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
-            </select>
-            <div className="flex gap-2">
-              <select value={itemUnit} onChange={(e) => setItemUnit(e.target.value)} className="rounded-xl border border-zinc-200 px-2 py-2 text-sm">
-                {INVENTORY_UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
-              </select>
+            <div className="md:col-span-2">
+              <label className="mb-1 block text-xs font-semibold text-zinc-700">Nome do produto / insumo</label>
               <input
-                type="number"
-                value={itemMin}
-                onChange={(e) => setItemMin(e.target.value)}
-                placeholder="Mín."
-                className="w-20 rounded-xl border border-zinc-200 px-2 py-2 text-sm"
+                required
+                placeholder="Ex: Caixa Fios Volume Russo 0.07"
+                value={itemName}
+                onChange={(e) => setItemName(e.target.value)}
+                className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm"
               />
             </div>
-            <button type="submit" className="rounded-xl bg-red-700 px-4 py-2 text-sm font-semibold text-white hover:bg-red-800">
-              Cadastrar item
-            </button>
+            <div>
+              <label className="mb-1 block text-xs font-semibold text-zinc-700">Categoria</label>
+              <select value={itemCat} onChange={(e) => setItemCat(e.target.value)} className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm">
+                {INVENTORY_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-zinc-700">Unidade</label>
+                <select value={itemUnit} onChange={(e) => setItemUnit(e.target.value)} className="w-full rounded-xl border border-zinc-200 px-2 py-2 text-sm">
+                  {INVENTORY_UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-zinc-700">Alerta mín.</label>
+                <input
+                  type="number"
+                  min={0}
+                  value={itemMin}
+                  onChange={(e) => setItemMin(e.target.value)}
+                  placeholder="Ex: 2"
+                  className="w-full rounded-xl border border-zinc-200 px-2 py-2 text-sm"
+                />
+              </div>
+            </div>
+            <div className="flex items-end">
+              <button type="submit" className="w-full rounded-xl bg-red-700 px-4 py-2 text-sm font-semibold text-white hover:bg-red-800">
+                Cadastrar item
+              </button>
+            </div>
           </form>
 
           <div className="space-y-2.5">

@@ -455,6 +455,33 @@ export async function deleteSubservice(ws: StudioWorkspace, subserviceId: string
   writeLocalState({ ...ws, subservices: ws.subservices.filter((s) => s.id !== subserviceId) });
 }
 
+export async function updateSubservice(
+  ws: StudioWorkspace,
+  subserviceId: string,
+  patch: {
+    name: string;
+    details?: string | null;
+    price_cents: number;
+    promo_price_cents: number | null;
+    duration_minutes: number;
+    maintenance_days: number | null;
+  }
+): Promise<void> {
+  if (isSupabaseConfigured && supabase) {
+    const { error } = await supabase
+      .from('mr_subservices')
+      .update({ ...patch, name: patch.name.trim() })
+      .eq('studio_id', ws.studio.id)
+      .eq('id', subserviceId);
+    if (error) throw new Error(error.message);
+    return;
+  }
+  writeLocalState({
+    ...ws,
+    subservices: ws.subservices.map((s) => (s.id === subserviceId ? { ...s, ...patch, name: patch.name.trim() } : s)),
+  });
+}
+
 export async function createAppointment(
   ws: StudioWorkspace,
   input: {

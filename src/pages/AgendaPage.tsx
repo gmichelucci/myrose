@@ -88,57 +88,74 @@ export default function AgendaPage() {
       <h1 className="text-2xl font-bold text-zinc-950">Agenda & Bloqueio de Dias</h1>
 
       <form onSubmit={handleCreate} className="grid gap-3 rounded-2xl border border-zinc-200 bg-white p-5 md:grid-cols-6">
-        <select
-          required
-          value={clientId}
-          onChange={(e) => setClientId(e.target.value)}
-          className="rounded-xl border border-zinc-200 px-3 py-2 text-sm"
-        >
-          <option value="">Cliente...</option>
-          {workspace.clients.map((c) => (
-            <option key={c.id} value={c.id}>{c.name}</option>
-          ))}
-        </select>
-        <select
-          required
-          value={subserviceId}
-          onChange={(e) => setSubserviceId(e.target.value)}
-          className="rounded-xl border border-zinc-200 px-3 py-2 text-sm"
-        >
-          <option value="">Procedimento...</option>
-          {workspace.subservices.map((s) => (
-            <option key={s.id} value={s.id}>{s.name} ({s.duration_minutes}m)</option>
-          ))}
-        </select>
-        <select
-          value={colabId}
-          onChange={(e) => setColabId(e.target.value)}
-          className="rounded-xl border border-zinc-200 px-3 py-2 text-sm"
-        >
-          <option value="">Profissional principal</option>
-          {workspace.collaborators.map((col) => (
-            <option key={col.id} value={col.id}>{col.name}</option>
-          ))}
-        </select>
-        <input
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          className="rounded-xl border border-zinc-200 px-3 py-2 text-sm"
-        />
-        <input
-          type="time"
-          value={startTime}
-          onChange={(e) => setStartTime(e.target.value)}
-          className="rounded-xl border border-zinc-200 px-3 py-2 text-sm"
-        />
-        <button
-          type="submit"
-          disabled={saving}
-          className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-red-700 px-4 py-2 text-sm font-semibold text-white hover:bg-red-800"
-        >
-          <Plus className="h-4 w-4" /> Agendar
-        </button>
+        <div>
+          <label className="mb-1 block text-xs font-semibold text-zinc-700">Cliente</label>
+          <select
+            required
+            value={clientId}
+            onChange={(e) => setClientId(e.target.value)}
+            className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm"
+          >
+            <option value="">Selecione...</option>
+            {workspace.clients.map((c) => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="mb-1 block text-xs font-semibold text-zinc-700">Procedimento</label>
+          <select
+            required
+            value={subserviceId}
+            onChange={(e) => setSubserviceId(e.target.value)}
+            className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm"
+          >
+            <option value="">Selecione...</option>
+            {workspace.subservices.map((s) => (
+              <option key={s.id} value={s.id}>{s.name} ({s.duration_minutes}m)</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="mb-1 block text-xs font-semibold text-zinc-700">Agenda / Profissional</label>
+          <select
+            value={colabId}
+            onChange={(e) => setColabId(e.target.value)}
+            className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm"
+          >
+            <option value="">Profissional principal</option>
+            {workspace.collaborators.map((col) => (
+              <option key={col.id} value={col.id}>{col.name}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="mb-1 block text-xs font-semibold text-zinc-700">Data do atendimento</label>
+          <input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm"
+          />
+        </div>
+        <div>
+          <label className="mb-1 block text-xs font-semibold text-zinc-700">Horário de início</label>
+          <input
+            type="time"
+            value={startTime}
+            onChange={(e) => setStartTime(e.target.value)}
+            className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm"
+          />
+        </div>
+        <div className="flex items-end">
+          <button
+            type="submit"
+            disabled={saving}
+            className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-red-700 px-4 py-2 text-sm font-semibold text-white hover:bg-red-800"
+          >
+            <Plus className="h-4 w-4" /> Agendar
+          </button>
+        </div>
         {err && <p className="text-xs text-red-600 md:col-span-6">{err}</p>}
       </form>
 

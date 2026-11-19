@@ -274,13 +274,28 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      <form onSubmit={saveStudio} className="grid gap-3 rounded-2xl border border-zinc-200 bg-white p-5 md:grid-cols-2">
+      <form onSubmit={saveStudio} className="grid gap-3.5 rounded-2xl border border-zinc-200 bg-white p-5 md:grid-cols-2">
         <h2 className="text-base font-bold text-zinc-950 md:col-span-2">Dados do Estúdio & Sinal Pix</h2>
-        <input value={businessName} onChange={(e) => setBusinessName(e.target.value)} placeholder="Nome do estúdio" className="rounded-xl border border-zinc-200 px-3 py-2 text-sm" />
-        <input value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="Código do link (/agendar/codigo)" className="rounded-xl border border-zinc-200 px-3 py-2 text-sm" />
-        <input value={pixKey} onChange={(e) => setPixKey(e.target.value)} placeholder="Chave Pix para sinal" className="rounded-xl border border-zinc-200 px-3 py-2 text-sm" />
-        <input type="number" min={0} max={100} value={depositPct} onChange={(e) => setDepositPct(e.target.value)} placeholder="% Sinal" className="rounded-xl border border-zinc-200 px-3 py-2 text-sm" />
-        <input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Endereço completo" className="rounded-xl border border-zinc-200 px-3 py-2 text-sm md:col-span-2" />
+        <div>
+          <label className="mb-1 block text-xs font-semibold text-zinc-700">Nome do estúdio</label>
+          <input value={businessName} onChange={(e) => setBusinessName(e.target.value)} placeholder="Ex: Studio Ana Lash" className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm" />
+        </div>
+        <div>
+          <label className="mb-1 block text-xs font-semibold text-zinc-700">Código do link público (/agendar/codigo)</label>
+          <input value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="Ex: studio-ana-lash" className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm" />
+        </div>
+        <div>
+          <label className="mb-1 block text-xs font-semibold text-zinc-700">Chave Pix para receber sinal (CPF, celular, e-mail ou aleatória)</label>
+          <input value={pixKey} onChange={(e) => setPixKey(e.target.value)} placeholder="Ex: 11999990000 ou pix@seuemail.com" className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm" />
+        </div>
+        <div>
+          <label className="mb-1 block text-xs font-semibold text-zinc-700">Porcentagem de sinal cobrado na reserva (%)</label>
+          <input type="number" min={0} max={100} value={depositPct} onChange={(e) => setDepositPct(e.target.value)} placeholder="Ex: 30 (use 0 para não cobrar sinal)" className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm" />
+        </div>
+        <div className="md:col-span-2">
+          <label className="mb-1 block text-xs font-semibold text-zinc-700">Endereço completo do estúdio</label>
+          <input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Ex: Rua das Flores, 120 - Sala 3 - Centro" className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm" />
+        </div>
         {msg && <p className="text-xs font-medium text-emerald-700 md:col-span-2">{msg}</p>}
         <button type="submit" className="rounded-xl bg-red-700 px-4 py-2 text-sm font-semibold text-white hover:bg-red-800 md:w-fit">
           Salvar configurações
@@ -383,9 +398,18 @@ export default function SettingsPage() {
 
         <form onSubmit={handleAddColab} className="space-y-3">
           <div className="grid gap-3 md:grid-cols-3">
-            <input required placeholder="Nome" value={colabName} onChange={(e) => setColabName(e.target.value)} className="rounded-xl border border-zinc-200 px-3 py-2 text-sm" />
-            <input required type="email" placeholder="E-mail de acesso" value={colabEmail} onChange={(e) => setColabEmail(e.target.value)} className="rounded-xl border border-zinc-200 px-3 py-2 text-sm" />
-            <input type="number" placeholder="Comissão %" value={colabCommission} onChange={(e) => setColabCommission(e.target.value)} className="rounded-xl border border-zinc-200 px-3 py-2 text-sm" />
+            <div>
+              <label className="mb-1 block text-xs font-semibold text-zinc-700">Nome da colaboradora</label>
+              <input required placeholder="Ex: Beatriz" value={colabName} onChange={(e) => setColabName(e.target.value)} className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm" />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-semibold text-zinc-700">E-mail de acesso</label>
+              <input required type="email" placeholder="equipe@estudio.com" value={colabEmail} onChange={(e) => setColabEmail(e.target.value)} className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm" />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-semibold text-zinc-700">Comissão por atendimento (%)</label>
+              <input type="number" min={0} max={100} placeholder="Ex: 40" value={colabCommission} onChange={(e) => setColabCommission(e.target.value)} className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm" />
+            </div>
           </div>
           <div className="flex flex-wrap gap-2">
             {COLLABORATOR_PERMISSIONS.map((perm) => (

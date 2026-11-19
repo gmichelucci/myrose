@@ -228,34 +228,49 @@ export default function LashMappingPage() {
       <form onSubmit={handleSave} className="grid gap-6 rounded-2xl border border-zinc-200 bg-white p-5 lg:grid-cols-2">
         <div className="space-y-3.5">
           <div className="grid gap-3 sm:grid-cols-2">
-            <select value={clientId} onChange={(e) => setClientId(e.target.value)} className="rounded-xl border border-zinc-200 px-3 py-2 text-sm">
-              <option value="">Cliente (opcional)...</option>
-              {workspace.clients.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
-            <input
-              placeholder="Cola utilizada (ex: Cherry 1.5s)"
-              value={adhesive}
-              onChange={(e) => setAdhesive(e.target.value)}
-              className="rounded-xl border border-zinc-200 px-3 py-2 text-sm"
-            />
+            <div>
+              <label className="mb-1 block text-xs font-semibold text-zinc-700">Cliente atendida</label>
+              <select value={clientId} onChange={(e) => setClientId(e.target.value)} className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm">
+                <option value="">Cliente avulsa (ou selecione)...</option>
+                {workspace.clients.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-semibold text-zinc-700">Cola / Adesivo utilizado</label>
+              <input
+                placeholder="Ex: Cherry 1.5s"
+                value={adhesive}
+                onChange={(e) => setAdhesive(e.target.value)}
+                className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm"
+              />
+            </div>
           </div>
 
           <div className="grid gap-3 sm:grid-cols-4">
-            <select value={technique} onChange={(e) => setTechnique(e.target.value)} className="rounded-xl border border-zinc-200 px-2.5 py-2 text-xs sm:col-span-2">
-              {LASH_TECHNIQUES.map((t) => <option key={t} value={t}>{t}</option>)}
-            </select>
-            <select value={style} onChange={(e) => setStyle(e.target.value)} className="rounded-xl border border-zinc-200 px-2.5 py-2 text-xs">
-              {LASH_STYLES.map((s) => <option key={s} value={s}>{s}</option>)}
-            </select>
-            <select value={curl} onChange={(e) => setCurl(e.target.value)} className="rounded-xl border border-zinc-200 px-2.5 py-2 text-xs">
-              {LASH_CURLS.map((c) => <option key={c} value={c}>Curv. {c}</option>)}
-            </select>
+            <div className="sm:col-span-2">
+              <label className="mb-1 block text-xs font-semibold text-zinc-700">Técnica</label>
+              <select value={technique} onChange={(e) => setTechnique(e.target.value)} className="w-full rounded-xl border border-zinc-200 px-2.5 py-2 text-xs">
+                {LASH_TECHNIQUES.map((t) => <option key={t} value={t}>{t}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-semibold text-zinc-700">Estilo / Mapping</label>
+              <select value={style} onChange={(e) => setStyle(e.target.value)} className="w-full rounded-xl border border-zinc-200 px-2.5 py-2 text-xs">
+                {LASH_STYLES.map((s) => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-semibold text-zinc-700">Curvatura</label>
+              <select value={curl} onChange={(e) => setCurl(e.target.value)} className="w-full rounded-xl border border-zinc-200 px-2.5 py-2 text-xs">
+                {LASH_CURLS.map((c) => <option key={c} value={c}>Curv. {c}</option>)}
+              </select>
+            </div>
           </div>
 
           <div>
-            <p className="mb-1.5 text-xs font-medium text-zinc-600">Numerações</p>
+            <p className="mb-1.5 text-xs font-semibold text-zinc-700">Numerações utilizadas (mm)</p>
             <div className="flex flex-wrap gap-1.5">
               {LASH_LENGTHS.map((len) => {
                 const on = sizes.includes(len);
@@ -275,12 +290,15 @@ export default function LashMappingPage() {
             </div>
           </div>
 
-          <input
-            placeholder="Espessura (ex: 0.07)"
-            value={thickness}
-            onChange={(e) => setThickness(e.target.value)}
-            className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm"
-          />
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-zinc-700">Espessura dos fios (mm)</label>
+            <input
+              placeholder="Ex: 0.07, 0.05, 0.15"
+              value={thickness}
+              onChange={(e) => setThickness(e.target.value)}
+              className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm"
+            />
+          </div>
           <textarea
             placeholder="Notas técnicas do atendimento..."
             value={notes}
