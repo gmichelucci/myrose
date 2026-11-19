@@ -1,18 +1,26 @@
-import { useState, type FormEvent } from 'react';
-import { ClipboardCheck, Copy, Plus, Search } from 'lucide-react';
+import { useRef, useState, type ChangeEvent, type FormEvent } from 'react';
+import { ClipboardCheck, Copy, Download, Plus, Search, Trash2, Upload } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { formatCurrencyBRL, getPlan } from '../lib/domain';
-import { createAnamnesisLink, createClient } from '../services/repository';
+import {
+  createAnamnesisLink,
+  createClient,
+  deleteClientsBulk,
+  importClientsCsv,
+} from '../services/repository';
 import { ANAMNESIS_AREAS } from '../types/domain';
 
 export default function ClientsPage() {
   const { workspace, refreshWorkspace } = useAuth();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [query, setQuery] = useState('');
   const [name, setName] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
   const [birthDate, setBirthDate] = useState('');
   const [selectedAreas, setSelectedAreas] = useState<string[]>(['lash_designer']);
   const [generatedLink, setGeneratedLink] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [importNotice, setImportNotice] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
   if (!workspace) return null;
@@ -44,6 +52,65 @@ export default function ClientsPage() {
     await refreshWorkspace();
   };
 
+  const handleDownloadTemplate = () => {
+    const csv = '\uFEFFnome;whatsapp;data_nascimento;observacoes\nCamila Exemplo;11999998888;1996-04-15;Prefere curvatura C\n';
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'modelo-clientes-myrose.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExportClients = () => {
+    const rows = [
+      'nome;whatsapp;data_nascimento;gasto_reais;observacoes',
+      ...workspace.clients.map(
+        (c) =>
+          `"${c.name.replace(/"/g, '""')}";"${c.whatsapp}";"${c.birth_date ?? ''}";"${(c.total_spent_cents / 100).toFixed(2).replace('.', ',')}";"${(c.notes ?? '').replace(/"/g, '""')}"`
+      ),
+    ];
+    const blob = new Blob(['\uFEFF' + rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'clientes-myrose.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setErr(null);
+    setImportNotice(null);
+    try {
+      const text = await file.text();
+      const res = await importClientsCsv(workspace, text);
+      await refreshWorkspace();
+      setImportNotice(
+        `Importação concluída: ${res.imported} cliente(s) adicionada(s)` +
+          (res.rejected.length > 0 ? ` · ${res.rejected.length} linha(s) ignorada(s).` : '.')
+      );
+    } catch (ex) {
+      setErr(ex instanceof Error ? ex.message : 'Falha ao importar planilha.');
+    } finally {
+      e.target.value = '';
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    await deleteClientsBulk(workspace, selectedIds);
+    setSelectedIds([]);
+    await refreshWorkspace();
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -54,7 +121,51 @@ export default function ClientsPage() {
             {plan.clientLimit === null ? 'Ilimitado' : plan.clientLimit} clientes
           </p>
         </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".csv,.txt,.tsv"
+            onChange={(e) => void handleFileChange(e)}
+            className="hidden"
+          />
+          <button
+            type="button"
+            onClick={handleDownloadTemplate}
+            className="inline-flex items-center gap-1 rounded-xl border border-zinc-200 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 hover:bg-zinc-50"
+          >
+            <Download className="h-3.5 w-3.5" /> Modelo Excel (.csv)
+          </button>
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="inline-flex items-center gap-1 rounded-xl border border-zinc-200 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-800 hover:bg-zinc-50"
+          >
+            <Upload className="h-3.5 w-3.5 text-red-700" /> Importar Planilha
+          </button>
+          <button
+            type="button"
+            onClick={handleExportClients}
+            className="inline-flex items-center gap-1 rounded-xl border border-zinc-200 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-800 hover:bg-zinc-50"
+          >
+            <Download className="h-3.5 w-3.5" /> Exportar (.csv)
+          </button>
+          {selectedIds.length > 0 && (
+            <button
+              type="button"
+              onClick={() => void handleBulkDelete()}
+              className="inline-flex items-center gap-1 rounded-xl bg-red-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-800"
+            >
+              <Trash2 className="h-3.5 w-3.5" /> Excluir selecionadas ({selectedIds.length})
+            </button>
+          )}
+        </div>
       </div>
+
+      {importNotice && (
+        <p className="rounded-xl bg-emerald-50 p-3 text-xs font-medium text-emerald-800">{importNotice}</p>
+      )}
 
       <form onSubmit={handleAdd} className="grid gap-3 rounded-2xl border border-zinc-200 bg-white p-5 md:grid-cols-4">
         <input
@@ -134,13 +245,22 @@ export default function ClientsPage() {
       <div className="space-y-2.5">
         {filtered.map((c) => {
           const filled = workspace.anamnesisRecords.some((r) => r.client_id === c.id);
+          const checked = selectedIds.includes(c.id);
           return (
             <div key={c.id} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-zinc-200 bg-white p-4 text-sm">
-              <div>
-                <p className="font-bold text-zinc-950">{c.name}</p>
-                <p className="text-xs text-zinc-500">
-                  {c.whatsapp} · Gasto acumulado: {formatCurrencyBRL(c.total_spent_cents)}
-                </p>
+              <div className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={() => toggleSelect(c.id)}
+                  className="h-4 w-4 accent-red-700"
+                />
+                <div>
+                  <p className="font-bold text-zinc-950">{c.name}</p>
+                  <p className="text-xs text-zinc-500">
+                    {c.whatsapp} · Gasto acumulado: {formatCurrencyBRL(c.total_spent_cents)}
+                  </p>
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 {filled && (

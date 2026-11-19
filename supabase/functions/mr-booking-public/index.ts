@@ -290,6 +290,51 @@ Deno.serve(async (req) => {
       return json({ userId: created.user.id, email: created.user.email }, 201);
     }
 
+    if (req.method === 'GET' && action === 'my-bookings') {
+      const codigo = (reqUrl.searchParams.get('codigo') ?? '').trim().toLowerCase();
+      const whatsapp = (reqUrl.searchParams.get('whatsapp') ?? '').replace(/\D/g, '');
+      if (!codigo || whatsapp.length < 10) {
+        return json({ error: 'Informe seu WhatsApp com DDD para consultar.' }, 400);
+      }
+
+      const { data: studio } = await db.from('mr_studios').select('id').eq('booking_slug', codigo).maybeSingle();
+      if (!studio) return json({ error: 'Estúdio não encontrado' }, 404);
+
+      const { data: appointments, error: listErr } = await db
+        .from('mr_appointments')
+        .select('id, appointment_date, start_time, end_time, status, total_cents, notes, items:mr_appointment_items(subservice_name, price_cents)')
+        .eq('studio_id', studio.id)
+        .eq('client_whatsapp', whatsapp)
+        .order('appointment_date', { ascending: false })
+        .limit(20);
+      if (listErr) return json({ error: listErr.message }, 500);
+
+      return json({ appointments: appointments ?? [] });
+    }
+
+    if (req.method === 'POST' && action === 'cancel-booking') {
+      const body = await req.json();
+      const codigo = String(body.codigo ?? '').trim().toLowerCase();
+      const whatsapp = String(body.whatsapp ?? '').replace(/\D/g, '');
+      const appointmentId = String(body.appointmentId ?? '').trim();
+      if (!codigo || whatsapp.length < 10 || !appointmentId) {
+        return json({ error: 'Dados incompletos para cancelamento.' }, 400);
+      }
+
+      const { data: studio } = await db.from('mr_studios').select('id').eq('booking_slug', codigo).maybeSingle();
+      if (!studio) return json({ error: 'Estúdio não encontrado' }, 404);
+
+      const { error: cancelErr } = await db
+        .from('mr_appointments')
+        .update({ status: 'cancelado' })
+        .eq('id', appointmentId)
+        .eq('studio_id', studio.id)
+        .eq('client_whatsapp', whatsapp);
+      if (cancelErr) return json({ error: cancelErr.message }, 500);
+
+      return json({ ok: true });
+    }
+
     return json({ error: 'Ação desconhecida' }, 404);
   } catch (err) {
     return json({ error: err instanceof Error ? err.message : 'Erro interno' }, 500);

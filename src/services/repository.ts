@@ -939,3 +939,235 @@ export async function openStripeBillingPortal(): Promise<string> {
 export async function syncStripeCheckoutSession(sessionId: string): Promise<{ synced: boolean; status?: string }> {
   return callStripeBilling<{ synced: boolean; status?: string }>({ action: 'sync', sessionId });
 }
+
+// ---------- Clientes: Exclusão em Massa & Importação CSV/Excel ----------
+
+export async function deleteClientsBulk(ws: StudioWorkspace, clientIds: string[]): Promise<void> {
+  if (clientIds.length === 0) return;
+  if (isSupabaseConfigured && supabase) {
+    const { error } = await supabase
+      .from('mr_clients')
+      .update({ active: false })
+      .eq('studio_id', ws.studio.id)
+      .in('id', clientIds);
+    if (error) throw new Error(error.message);
+    return;
+  }
+  const set = new Set(clientIds);
+  writeLocalState({ ...ws, clients: ws.clients.filter((c) => !set.has(c.id)) });
+}
+
+export async function importClientsCsv(
+  ws: StudioWorkspace,
+  csvText: string
+): Promise<{ imported: number; rejected: string[] }> {
+  const lines = csvText
+    .replace(/^\uFEFF/, '')
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter(Boolean);
+  if (lines.length === 0) return { imported: 0, rejected: [] };
+
+  const sep = lines[0].includes(';') ? ';' : ',';
+  const splitRow = (line: string) =>
+    line.split(sep).map((cell) => cell.trim().replace(/^["']|["']$/g, ''));
+
+  const firstCells = splitRow(lines[0]).map((c) => c.toLowerCase());
+  const hasHeader = firstCells.some((c) =>
+    ['nome', 'name', 'cliente', 'whatsapp', 'telefone', 'celular'].includes(c)
+  );
+  const dataLines = hasHeader ? lines.slice(1) : lines;
+
+  const plan = getPlan(ws.studio.plan_id);
+  const existingPhones = new Set(ws.clients.map((c) => c.whatsapp.replace(/\D/g, '')));
+  let currentCount = ws.clients.length;
+  let imported = 0;
+  const rejected: string[] = [];
+
+  for (const rawLine of dataLines) {
+    const cols = splitRow(rawLine);
+    const name = (cols[0] ?? '').trim();
+    const whatsapp = (cols[1] ?? '').replace(/\D/g, '');
+    const rawBirth = (cols[2] ?? '').trim();
+    const notes = (cols[3] ?? '').trim() || null;
+
+    if (name.length < 2 || whatsapp.length < 10) {
+      rejected.push(`${rawLine} (nome ou WhatsApp inválido)`);
+      continue;
+    }
+    if (existingPhones.has(whatsapp)) {
+      rejected.push(`${name} (${whatsapp} já cadastrada)`);
+      continue;
+    }
+    if (!canAddResource(currentCount, plan.clientLimit)) {
+      rejected.push(`${name} (limite de ${plan.clientLimit} clientes do plano ${plan.name} atingido)`);
+      continue;
+    }
+
+    let birthDate: string | null = null;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(rawBirth)) {
+      birthDate = rawBirth;
+    } else if (/^\d{2}\/\d{2}\/\d{4}$/.test(rawBirth)) {
+      const [d, m, y] = rawBirth.split('/');
+      birthDate = `${y}-${m}-${d}`;
+    }
+
+    try {
+      await createClient(
+        { ...ws, clients: new Array(currentCount).fill(ws.clients[0]) as Client[] },
+        { name, whatsapp, birth_date: birthDate, notes }
+      );
+      existingPhones.add(whatsapp);
+      currentCount += 1;
+      imported += 1;
+    } catch (ex) {
+      rejected.push(`${name} (${ex instanceof Error ? ex.message : 'erro'})`);
+    }
+  }
+
+  return { imported, rejected };
+}
+
+// ---------- Expediente & Dias Bloqueados ----------
+
+export async function toggleBlockedDate(ws: StudioWorkspace, dateStr: string): Promise<void> {
+  const isBlocked = ws.blockedDates.includes(dateStr);
+  if (isSupabaseConfigured && supabase) {
+    if (isBlocked) {
+      const { error } = await supabase
+        .from('mr_blocked_days')
+        .delete()
+        .eq('studio_id', ws.studio.id)
+        .eq('blocked_date', dateStr);
+      if (error) throw new Error(error.message);
+    } else {
+      const { error } = await supabase
+        .from('mr_blocked_days')
+        .insert({ studio_id: ws.studio.id, blocked_date: dateStr, reason: 'Folga / Bloqueio manual' });
+      if (error) throw new Error(error.message);
+    }
+    return;
+  }
+  const next = isBlocked ? ws.blockedDates.filter((d) => d !== dateStr) : [...ws.blockedDates, dateStr];
+  writeLocalState({ ...ws, blockedDates: next });
+}
+
+export async function saveWorkingHours(ws: StudioWorkspace, hours: WorkingHour[]): Promise<void> {
+  if (isSupabaseConfigured && supabase) {
+    const rows = hours.map((h) => ({
+      studio_id: ws.studio.id,
+      day_of_week: h.day_of_week,
+      active: h.active,
+      start_time: h.start_time,
+      end_time: h.end_time,
+      break_start: h.break_start,
+      break_end: h.break_end,
+    }));
+    const { error } = await supabase
+      .from('mr_working_hours')
+      .upsert(rows, { onConflict: 'studio_id,day_of_week' });
+    if (error) throw new Error(error.message);
+    return;
+  }
+  writeLocalState({ ...ws, workingHours: hours });
+}
+
+// ---------- Servidor Local de WhatsApp (Baileys / Porta 8086) ----------
+
+const WA_LOCAL_URL_KEY = 'myrose_wa_local_url';
+
+export function getLocalWhatsAppUrl(): string {
+  return (localStorage.getItem(WA_LOCAL_URL_KEY) || 'http://localhost:8086').replace(/\/+$/, '');
+}
+
+export function setLocalWhatsAppUrl(url: string): void {
+  localStorage.setItem(WA_LOCAL_URL_KEY, url.trim().replace(/\/+$/, '') || 'http://localhost:8086');
+}
+
+export async function fetchLocalWhatsAppStatus(): Promise<{
+  status: string;
+  qrImage?: string | null;
+  user?: { id?: string } | null;
+  sentCount?: number;
+  recentLogs?: Array<{ id: string; number: string; preview: string; sentAt: string }>;
+}> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 2200);
+  try {
+    const res = await fetch(`${getLocalWhatsAppUrl()}/qr-data`, { signal: controller.signal });
+    if (!res.ok) return { status: 'offline' };
+    return await res.json();
+  } catch {
+    return { status: 'offline' };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+export async function sendWhatsAppSmart(
+  phone: string,
+  text: string
+): Promise<{ mode: 'local' | 'wa_me' }> {
+  const digits = phone.replace(/\D/g, '');
+  const fullPhone = digits.startsWith('55') ? digits : `55${digits}`;
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 3000);
+  try {
+    const res = await fetch(`${getLocalWhatsAppUrl()}/message/sendText/myrose`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ number: fullPhone, text }),
+      signal: controller.signal,
+    });
+    if (res.ok) {
+      return { mode: 'local' };
+    }
+  } catch {
+    // fallback automático para wa.me
+  } finally {
+    clearTimeout(timer);
+  }
+
+  window.open(`https://wa.me/${fullPhone}?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
+  return { mode: 'wa_me' };
+}
+
+// ---------- Autoatendimento da Cliente (/agendar/:codigo) ----------
+
+export async function fetchPublicClientBookings(codigo: string, whatsapp: string): Promise<Appointment[]> {
+  const clean = whatsapp.replace(/\D/g, '');
+  if (isSupabaseConfigured) {
+    const res = await fetch(getPublicFunctionUrl('my-bookings', { codigo, whatsapp: clean }), {
+      headers: { apikey: import.meta.env.VITE_SUPABASE_ANON_KEY },
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error ?? 'Erro ao buscar agendamentos');
+    return (data.appointments ?? []) as Appointment[];
+  }
+  const local = readLocalState();
+  return local.appointments.filter((a) => a.client_whatsapp.replace(/\D/g, '') === clean);
+}
+
+export async function cancelPublicClientBooking(
+  codigo: string,
+  whatsapp: string,
+  appointmentId: string
+): Promise<void> {
+  const clean = whatsapp.replace(/\D/g, '');
+  if (isSupabaseConfigured) {
+    const res = await fetch(getPublicFunctionUrl('cancel-booking'), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+      },
+      body: JSON.stringify({ codigo, whatsapp: clean, appointmentId }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error ?? 'Erro ao cancelar agendamento');
+    return;
+  }
+  const local = readLocalState();
+  await updateAppointmentStatus(local, appointmentId, 'cancelado');
+}

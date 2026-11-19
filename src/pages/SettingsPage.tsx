@@ -1,16 +1,19 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { CreditCard, ExternalLink, Plus, Shield } from 'lucide-react';
+import { Clock, Copy, CreditCard, ExternalLink, Gift, Plus, Shield } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { formatCurrencyBRL, getPlan } from '../lib/domain';
 import {
   addCollaborator,
   openStripeBillingPortal,
+  saveWorkingHours,
   startStripeCheckout,
   syncStripeCheckoutSession,
   updateStudioSettings,
 } from '../services/repository';
-import { COLLABORATOR_PERMISSIONS, PLANS, type PlanId } from '../types/domain';
+import { COLLABORATOR_PERMISSIONS, PLANS, type PlanId, type WorkingHour } from '../types/domain';
+
+const DAY_NAMES = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
 
 export default function SettingsPage() {
   const { workspace, refreshWorkspace, isDemoMode } = useAuth();
@@ -27,6 +30,22 @@ export default function SettingsPage() {
   const [pixKey, setPixKey] = useState(workspace?.studio.pix_key ?? '');
   const [depositPct, setDepositPct] = useState(String(workspace?.studio.deposit_percent ?? 0));
   const [address, setAddress] = useState(workspace?.studio.address ?? '');
+
+  const [hours, setHours] = useState<WorkingHour[]>(() =>
+    [0, 1, 2, 3, 4, 5, 6].map(
+      (d) =>
+        workspace?.workingHours.find((h) => h.day_of_week === d) ?? {
+          day_of_week: d,
+          active: d >= 1 && d <= 6,
+          start_time: '09:00',
+          end_time: d === 6 ? '16:00' : '18:00',
+          break_start: '12:00',
+          break_end: '13:00',
+        }
+    )
+  );
+  const [hoursSaved, setHoursSaved] = useState(false);
+  const [copiedRef, setCopiedRef] = useState(false);
 
   const [colabName, setColabName] = useState('');
   const [colabEmail, setColabEmail] = useState('');
@@ -61,6 +80,7 @@ export default function SettingsPage() {
   if (!workspace) return null;
   const plan = getPlan(workspace.studio.plan_id);
   const highlightUpgrade = searchParams.get('upgrade');
+  const referralUrl = `${window.location.origin}/cadastro?ref=${workspace.studio.booking_slug}`;
 
   const saveStudio = async (e: FormEvent) => {
     e.preventDefault();
@@ -74,6 +94,13 @@ export default function SettingsPage() {
     });
     await refreshWorkspace();
     setMsg('Configurações salvas!');
+  };
+
+  const handleSaveHours = async () => {
+    await saveWorkingHours(workspace, hours);
+    await refreshWorkspace();
+    setHoursSaved(true);
+    setTimeout(() => setHoursSaved(false), 2000);
   };
 
   const handleAddColab = async (e: FormEvent) => {
@@ -129,7 +156,7 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-zinc-950">Equipe, Plano & Configurações</h1>
+      <h1 className="text-2xl font-bold text-zinc-950">Equipe, Expediente, Plano & Indicações</h1>
 
       <div className="space-y-4 rounded-2xl border border-zinc-200 bg-white p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -260,6 +287,93 @@ export default function SettingsPage() {
         </button>
       </form>
 
+      <div className="space-y-3 rounded-2xl border border-zinc-200 bg-white p-5">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="flex items-center gap-2 text-base font-bold text-zinc-950">
+            <Clock className="h-4 w-4 text-red-700" /> Expediente & Intervalo de Almoço
+          </h2>
+          <button
+            type="button"
+            onClick={() => void handleSaveHours()}
+            className="rounded-xl bg-red-700 px-4 py-1.5 text-xs font-semibold text-white hover:bg-red-800"
+          >
+            {hoursSaved ? 'Expediente salvo!' : 'Salvar expediente'}
+          </button>
+        </div>
+        <div className="space-y-2">
+          {hours.map((h, idx) => (
+            <div
+              key={h.day_of_week}
+              className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-zinc-200 px-3 py-2 text-xs"
+            >
+              <label className="flex w-28 items-center gap-2 font-semibold text-zinc-800">
+                <input
+                  type="checkbox"
+                  checked={h.active}
+                  onChange={(e) =>
+                    setHours((prev) =>
+                      prev.map((row, i) => (i === idx ? { ...row, active: e.target.checked } : row))
+                    )
+                  }
+                  className="accent-red-700"
+                />
+                {DAY_NAMES[h.day_of_week]}
+              </label>
+              {h.active ? (
+                <div className="flex flex-wrap items-center gap-2">
+                  <span>Início:</span>
+                  <input
+                    type="time"
+                    value={h.start_time.slice(0, 5)}
+                    onChange={(e) =>
+                      setHours((prev) =>
+                        prev.map((row, i) => (i === idx ? { ...row, start_time: e.target.value } : row))
+                      )
+                    }
+                    className="rounded-lg border border-zinc-200 px-2 py-1"
+                  />
+                  <span>Fim:</span>
+                  <input
+                    type="time"
+                    value={h.end_time.slice(0, 5)}
+                    onChange={(e) =>
+                      setHours((prev) =>
+                        prev.map((row, i) => (i === idx ? { ...row, end_time: e.target.value } : row))
+                      )
+                    }
+                    className="rounded-lg border border-zinc-200 px-2 py-1"
+                  />
+                  <span className="text-zinc-500">Almoço:</span>
+                  <input
+                    type="time"
+                    value={(h.break_start ?? '12:00').slice(0, 5)}
+                    onChange={(e) =>
+                      setHours((prev) =>
+                        prev.map((row, i) => (i === idx ? { ...row, break_start: e.target.value } : row))
+                      )
+                    }
+                    className="rounded-lg border border-zinc-200 px-2 py-1"
+                  />
+                  <span>às</span>
+                  <input
+                    type="time"
+                    value={(h.break_end ?? '13:00').slice(0, 5)}
+                    onChange={(e) =>
+                      setHours((prev) =>
+                        prev.map((row, i) => (i === idx ? { ...row, break_end: e.target.value } : row))
+                      )
+                    }
+                    className="rounded-lg border border-zinc-200 px-2 py-1"
+                  />
+                </div>
+              ) : (
+                <span className="text-zinc-400">Fechado</span>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
       <div className="space-y-4 rounded-2xl border border-zinc-200 bg-white p-5">
         <div className="flex items-center justify-between">
           <h2 className="flex items-center gap-2 text-base font-bold text-zinc-950">
@@ -290,6 +404,35 @@ export default function SettingsPage() {
             <Plus className="h-4 w-4" /> Adicionar colaboradora
           </button>
         </form>
+      </div>
+
+      <div className="rounded-2xl border border-red-200 bg-gradient-to-r from-red-50/60 to-white p-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="flex items-center gap-2 text-base font-bold text-zinc-950">
+              <Gift className="h-4 w-4 text-red-700" /> Indique e Ganhe — Programa de Afiliadas MyRose
+            </h2>
+            <p className="mt-1 text-xs text-zinc-600">
+              Compartilhe seu link exclusivo com outras profissionais de estética e acumule bônus na assinatura.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <code className="rounded-xl border border-zinc-200 bg-white px-3 py-1.5 font-mono text-xs text-zinc-800">
+              {referralUrl}
+            </code>
+            <button
+              type="button"
+              onClick={() => {
+                void navigator.clipboard.writeText(referralUrl);
+                setCopiedRef(true);
+                setTimeout(() => setCopiedRef(false), 2000);
+              }}
+              className="inline-flex items-center gap-1 rounded-xl bg-red-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-800"
+            >
+              <Copy className="h-3.5 w-3.5" /> {copiedRef ? 'Copiado!' : 'Copiar link'}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
