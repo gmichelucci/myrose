@@ -1,0 +1,17 @@
+{
+  "name": "MyRose",
+  "short_name": "MyRose",
+  "description": "Agenda, clientes, anamnese, lash mapping e financeiro para estúdios.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#991b1b",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

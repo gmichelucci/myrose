@@ -1,0 +1,30 @@
+# Dependências e build
+node_modules/
+dist/
+dist-ssr/
+*.tsbuildinfo
+
+# Variáveis de ambiente e segredos locais (NUNCA versionar)
+.env
+.env.*
+!.env.example
+
+# Supabase CLI / temporários
+supabase/.temp/
+.supabase/
+
+# Logs, pacotes locais e artefatos de sistema
+*.log
+*.zip
+Abrir-MyRose.cmd
+public/hellrose-logo.jpeg
+
+# Certificados / Keystores (Android Play Store / TWA)
+*.jks
+*.keystore
+*.p12
+*.pem
+*.key
+assetlinks.json
+.DS_Store
+Thumbs.db

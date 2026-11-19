@@ -1,0 +1,16 @@
+-- Opcional: preencha com os price_id gerados na sua conta Stripe (se omitido, mr-stripe-billing usa price_data dinâmico).
+--
+-- UPDATE public.mr_plans
+-- SET stripe_monthly_price_id = 'price_STARTER_MONTHLY',
+--     stripe_annual_price_id  = 'price_STARTER_ANNUAL'
+-- WHERE id = 'starter';
+--
+-- UPDATE public.mr_plans
+-- SET stripe_monthly_price_id = 'price_PREMIUM_MONTHLY',
+--     stripe_annual_price_id  = 'price_PREMIUM_ANNUAL'
+-- WHERE id = 'premium';
+--
+-- UPDATE public.mr_plans
+-- SET stripe_monthly_price_id = 'price_PRO_MONTHLY',
+--     stripe_annual_price_id  = 'price_PRO_ANNUAL'
+-- WHERE id = 'profissional';
