@@ -7,8 +7,9 @@ import {
   createClient,
   deleteClientsBulk,
   importClientsCsv,
+  sendWhatsAppSmart,
 } from '../services/repository';
-import { ANAMNESIS_AREAS } from '../types/domain';
+import { ANAMNESIS_AREAS, ANAMNESIS_QUESTIONS } from '../types/domain';
 
 export default function ClientsPage() {
   const { workspace, refreshWorkspace } = useAuth();
@@ -20,6 +21,7 @@ export default function ClientsPage() {
   const [selectedAreas, setSelectedAreas] = useState<string[]>(['lash_designer']);
   const [generatedLink, setGeneratedLink] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [openRecordClientId, setOpenRecordClientId] = useState<string | null>(null);
   const [importNotice, setImportNotice] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
@@ -244,38 +246,78 @@ export default function ClientsPage() {
 
       <div className="space-y-2.5">
         {filtered.map((c) => {
-          const filled = workspace.anamnesisRecords.some((r) => r.client_id === c.id);
+          const record = workspace.anamnesisRecords.find((r) => r.client_id === c.id);
+          const filled = Boolean(record);
           const checked = selectedIds.includes(c.id);
+          const isOpen = openRecordClientId === c.id;
           return (
-            <div key={c.id} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-zinc-200 bg-white p-4 text-sm">
-              <div className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  checked={checked}
-                  onChange={() => toggleSelect(c.id)}
-                  className="h-4 w-4 accent-red-700"
-                />
-                <div>
-                  <p className="font-bold text-zinc-950">{c.name}</p>
-                  <p className="text-xs text-zinc-500">
-                    {c.whatsapp} · Gasto acumulado: {formatCurrencyBRL(c.total_spent_cents)}
-                  </p>
+            <div key={c.id} className="space-y-3 rounded-2xl border border-zinc-200 bg-white p-4 text-sm">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => toggleSelect(c.id)}
+                    className="h-4 w-4 accent-red-700"
+                  />
+                  <div>
+                    <p className="font-bold text-zinc-950">{c.name}</p>
+                    <p className="text-xs text-zinc-500">
+                      {c.whatsapp} · Gasto acumulado: {formatCurrencyBRL(c.total_spent_cents)}
+                      {c.birth_date ? ` · Nasc: ${c.birth_date.split('-').reverse().join('/')}` : ''}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  {filled && (
+                    <button
+                      type="button"
+                      onClick={() => setOpenRecordClientId(isOpen ? null : c.id)}
+                      className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 hover:bg-emerald-100"
+                    >
+                      {isOpen ? 'Ocultar respostas' : 'Ver ficha preenchida'}
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => void handleCreateAnamnesis(c.id)}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-800"
+                  >
+                    <ClipboardCheck className="h-3.5 w-3.5" /> Gerar ficha
+                  </button>
+                  {generatedLink && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        void sendWhatsAppSmart(
+                          c.whatsapp,
+                          `Oi ${c.name.split(' ')[0]}! Preencha sua ficha de anamnese do ${workspace.studio.business_name} antes do atendimento: ${generatedLink}`
+                        )
+                      }
+                      className="rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700"
+                    >
+                      Enviar no WhatsApp
+                    </button>
+                  )}
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                {filled && (
-                  <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
-                    Ficha preenchida
-                  </span>
-                )}
-                <button
-                  type="button"
-                  onClick={() => void handleCreateAnamnesis(c.id)}
-                  className="inline-flex items-center gap-1.5 rounded-xl border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-800"
-                >
-                  <ClipboardCheck className="h-3.5 w-3.5" /> Gerar ficha
-                </button>
-              </div>
+
+              {isOpen && record && (
+                <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3.5 text-xs">
+                  <p className="font-bold text-zinc-900">Respostas da Ficha de Anamnese:</p>
+                  <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                    {Object.entries(record.answers).map(([qId, ans]) => {
+                      const qLabel = ANAMNESIS_QUESTIONS.find((q) => q.id === qId)?.question ?? qId;
+                      return (
+                        <div key={qId} className="rounded-lg bg-white p-2 border border-zinc-200/70">
+                          <p className="text-zinc-500">{qLabel}</p>
+                          <p className="font-semibold text-zinc-950">{String(ans) || '—'}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           );
         })}

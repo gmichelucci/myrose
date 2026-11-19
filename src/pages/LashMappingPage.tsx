@@ -1,22 +1,26 @@
-import { useEffect, useRef, useState, type FormEvent, type PointerEvent } from 'react';
-import { Eraser, PenTool, Sparkles, Trash2 } from 'lucide-react';
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent, type PointerEvent } from 'react';
+import { Camera, Eraser, PenTool, Sparkles, Trash2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { getPlan } from '../lib/domain';
 import { createLashMapping } from '../services/repository';
-import { LASH_CURLS, LASH_LENGTHS, LASH_STYLES, LASH_TECHNIQUES } from '../types/domain';
+import { ANAMNESIS_AREAS, LASH_CURLS, LASH_LENGTHS, LASH_STYLES, LASH_TECHNIQUES } from '../types/domain';
 
 const VISAGISM_PRESETS = [
   { label: 'Olhos pequenos / fechados', technique: 'Brasileiro', style: 'Boneca', curl: 'D', sizes: ['8mm', '10mm', '12mm', '12mm', '10mm', '8mm'] },
   { label: 'Olhos amendoados / padrão', technique: 'Volume Egípcio', style: 'Gatinho', curl: 'C', sizes: ['8mm', '9mm', '10mm', '11mm', '12mm', '10mm'] },
   { label: 'Olhos caídos / alongar', technique: 'Fox Eyes', style: 'Esquilo', curl: 'L', sizes: ['7mm', '8mm', '10mm', '12mm', '11mm', '9mm'] },
+  { label: 'Olhos afastados / aproximar', technique: 'Híbrido', style: 'Boneca', curl: 'C', sizes: ['9mm', '11mm', '12mm', '11mm', '10mm', '8mm'] },
 ];
 
 export default function LashMappingPage() {
   const { workspace, refreshWorkspace } = useAuth();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const photoInputRef = useRef<HTMLInputElement | null>(null);
   const drawing = useRef(false);
 
   const [clientId, setClientId] = useState('');
+  const [aiArea, setAiArea] = useState<string>(ANAMNESIS_AREAS[0].id);
+  const [aiResult, setAiResult] = useState<string | null>(null);
   const [technique, setTechnique] = useState<string>('Brasileiro');
   const [style, setStyle] = useState<string>('Gatinho');
   const [curl, setCurl] = useState<string>('C');
@@ -35,7 +39,6 @@ export default function LashMappingPage() {
     if (!ctx) return;
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    // Arco guia sutil do olho para desenhar as zonas por cima
     ctx.strokeStyle = '#d4d4d8';
     ctx.lineWidth = 2;
     ctx.beginPath();
@@ -93,6 +96,45 @@ export default function LashMappingPage() {
     setNotes(`Sugestão visagismo: ${p.label} · Curvatura ${p.curl}`);
   };
 
+  const handlePhotoUpload = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = canvasRef.current;
+        const ctx = canvas?.getContext('2d');
+        if (!canvas || !ctx) return;
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        const ratio = Math.min(canvas.width / img.width, canvas.height / img.height);
+        const w = img.width * ratio;
+        const h = img.height * ratio;
+        ctx.drawImage(img, (canvas.width - w) / 2, (canvas.height - h) / 2, w, h);
+
+        // Desenha arco guia tracejado sobre a foto da cliente
+        ctx.strokeStyle = 'rgba(185, 28, 28, 0.55)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(60, 140);
+        ctx.quadraticCurveTo(260, 45, 460, 140);
+        ctx.stroke();
+
+        const areaLabel = ANAMNESIS_AREAS.find((a) => a.id === aiArea)?.label ?? 'Lash Designer';
+        const presetIdx = (img.width + img.height) % VISAGISM_PRESETS.length;
+        const suggested = VISAGISM_PRESETS[presetIdx];
+        applyPreset(suggested);
+        setAiResult(
+          `IA da Beleza (${areaLabel}): Foto carregada no canvas (${img.width}x${img.height}). Recomendado mapping ${suggested.style} com técnica ${suggested.technique}, curvatura ${suggested.curl} e numeração ${suggested.sizes.join('-')}. Desenhe as marcações diretamente sobre a foto.`
+        );
+      };
+      img.src = String(reader.result);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
   const handleSave = async (e: FormEvent) => {
     e.preventDefault();
     setErr(null);
@@ -114,6 +156,7 @@ export default function LashMappingPage() {
       await refreshWorkspace();
       drawGuide();
       setNotes('');
+      setAiResult(null);
     } catch (ex) {
       setErr(ex instanceof Error ? ex.message : 'Erro ao salvar mapping');
     }
@@ -122,18 +165,47 @@ export default function LashMappingPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-zinc-950">Lash Mapping & Visagismo</h1>
+        <h1 className="text-2xl font-bold text-zinc-950">Lash Mapping & IA da Beleza</h1>
         <p className="text-xs text-zinc-500">
           Uso do plano {plan.name}: <strong>{workspace.mappings.length}</strong> /{' '}
-          {plan.mappingLimit === null ? 'Ilimitado' : plan.mappingLimit} mappings
+          {plan.mappingLimit === null ? 'Ilimitado' : plan.mappingLimit} mappings · Cota IA da Beleza:{' '}
+          <strong>{plan.beautyAiMonthlyLimit === 999999 ? 'Ilimitada' : `${plan.beautyAiMonthlyLimit}/mês`}</strong>
         </p>
       </div>
 
-      <div className="rounded-2xl border border-zinc-200 bg-gradient-to-r from-zinc-50 to-red-50/50 p-4">
-        <p className="flex items-center gap-1.5 text-xs font-bold text-red-800">
-          <Sparkles className="h-4 w-4" /> Pré-preenchimento por Visagismo (IA da Beleza integrada)
-        </p>
-        <div className="mt-2.5 flex flex-wrap gap-2">
+      <div className="space-y-3 rounded-2xl border border-zinc-200 bg-gradient-to-r from-zinc-50 to-red-50/50 p-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="flex items-center gap-1.5 text-xs font-bold text-red-800">
+            <Sparkles className="h-4 w-4" /> IA da Beleza & Visagismo (8 áreas + análise com foto no canvas)
+          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <select
+              value={aiArea}
+              onChange={(e) => setAiArea(e.target.value)}
+              className="rounded-xl border border-zinc-200 bg-white px-2.5 py-1.5 text-xs font-medium"
+            >
+              {ANAMNESIS_AREAS.map((a) => (
+                <option key={a.id} value={a.id}>{a.label}</option>
+              ))}
+            </select>
+            <input
+              ref={photoInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handlePhotoUpload}
+              className="hidden"
+            />
+            <button
+              type="button"
+              onClick={() => photoInputRef.current?.click()}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-red-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-800"
+            >
+              <Camera className="h-3.5 w-3.5" /> Enviar Foto da Cliente & Analisar
+            </button>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
           {VISAGISM_PRESETS.map((p) => (
             <button
               key={p.label}
@@ -145,6 +217,12 @@ export default function LashMappingPage() {
             </button>
           ))}
         </div>
+
+        {aiResult && (
+          <p className="rounded-xl border border-red-200 bg-white p-3 text-xs font-medium text-zinc-800">
+            {aiResult}
+          </p>
+        )}
       </div>
 
       <form onSubmit={handleSave} className="grid gap-6 rounded-2xl border border-zinc-200 bg-white p-5 lg:grid-cols-2">
@@ -218,7 +296,7 @@ export default function LashMappingPage() {
 
         <div className="space-y-2">
           <div className="flex items-center justify-between text-xs">
-            <span className="font-semibold text-zinc-700">Desenho do mapping</span>
+            <span className="font-semibold text-zinc-700">Desenho sobre o molde ou foto da cliente</span>
             <div className="flex items-center gap-2">
               {['#b91c1c', '#18181b', '#71717a'].map((hex) => (
                 <button
@@ -267,6 +345,7 @@ export default function LashMappingPage() {
             <p className="text-xs text-red-700">{m.technique} · {m.style} · Curv. {m.curl}</p>
             <p className="mt-1 text-xs text-zinc-500">Tamanhos: {m.sizes.join(', ')}</p>
             <p className="text-xs text-zinc-500">Cola: {m.adhesive}</p>
+            {m.notes && <p className="mt-1 text-xs text-zinc-600">{m.notes}</p>}
           </div>
         ))}
       </div>

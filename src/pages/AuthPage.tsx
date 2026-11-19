@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabase';
 
 export default function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
   const { signIn, signUpStudio, isDemoMode, error: authError } = useAuth();
@@ -58,6 +59,24 @@ export default function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
       setErr(ex instanceof Error ? ex.message : 'Falha ao entrar na conta demo.');
     } finally {
       setBusy(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    setErr(null);
+    setNotice(null);
+    if (!email.trim() || !email.includes('@')) {
+      setErr('Digite seu e-mail acima antes de clicar em Esqueci minha senha.');
+      return;
+    }
+    if (!supabase) return;
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: `${window.location.origin}/login`,
+    });
+    if (error) {
+      setErr(error.message);
+    } else {
+      setNotice('Link de recuperação de senha enviado para o seu e-mail!');
     }
   };
 
@@ -181,6 +200,15 @@ export default function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
           >
             Testar Estúdio Demo (1 clique)
           </button>
+          {mode === 'login' && (
+            <button
+              type="button"
+              onClick={() => void handleForgotPassword()}
+              className="w-full text-center text-xs font-medium text-zinc-500 hover:text-red-700 hover:underline"
+            >
+              Esqueci minha senha
+            </button>
+          )}
         </form>
 
         <p className="mt-5 text-center text-xs text-zinc-600">

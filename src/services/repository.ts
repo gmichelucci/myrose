@@ -411,6 +411,7 @@ export async function createSubservice(
     service_id: string;
     name: string;
     price_cents: number;
+    promo_price_cents?: number | null;
     duration_minutes: number;
     maintenance_days: number | null;
     details?: string | null;
@@ -432,13 +433,26 @@ export async function createSubservice(
     name: input.name.trim(),
     details: input.details ?? null,
     price_cents: input.price_cents,
-    promo_price_cents: null,
+    promo_price_cents: input.promo_price_cents ?? null,
     duration_minutes: input.duration_minutes,
     maintenance_days: input.maintenance_days,
     active: true,
   };
   writeLocalState({ ...ws, subservices: [...ws.subservices, created] });
   return created;
+}
+
+export async function deleteSubservice(ws: StudioWorkspace, subserviceId: string): Promise<void> {
+  if (isSupabaseConfigured && supabase) {
+    const { error } = await supabase
+      .from('mr_subservices')
+      .update({ active: false })
+      .eq('studio_id', ws.studio.id)
+      .eq('id', subserviceId);
+    if (error) throw new Error(error.message);
+    return;
+  }
+  writeLocalState({ ...ws, subservices: ws.subservices.filter((s) => s.id !== subserviceId) });
 }
 
 export async function createAppointment(

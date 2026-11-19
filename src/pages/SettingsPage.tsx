@@ -404,6 +404,35 @@ export default function SettingsPage() {
             <Plus className="h-4 w-4" /> Adicionar colaboradora
           </button>
         </form>
+
+        {workspace.collaborators.length > 0 && (
+          <div className="space-y-2 border-t border-zinc-200 pt-3">
+            <p className="text-xs font-bold uppercase text-zinc-500">Desempenho & Comissões da Equipe</p>
+            {workspace.collaborators.map((col) => {
+              const realized = workspace.appointments.filter(
+                (a) => a.collaborator_id === col.id && a.status === 'realizado'
+              );
+              const totalGenerated = realized.reduce((acc, a) => acc + a.total_cents, 0);
+              const commissionCents = Math.round((totalGenerated * col.commission_percent) / 100);
+              return (
+                <div
+                  key={col.id}
+                  className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-zinc-200 bg-zinc-50 px-3.5 py-2.5 text-xs"
+                >
+                  <div>
+                    <span className="font-bold text-zinc-950">{col.name}</span> · {col.email} · Comissão:{' '}
+                    <strong>{col.commission_percent}%</strong>
+                  </div>
+                  <div className="text-zinc-700">
+                    Atendimentos: <strong>{realized.length}</strong> · Produzido:{' '}
+                    <strong>{formatCurrencyBRL(totalGenerated)}</strong> · Comissão a pagar:{' '}
+                    <strong className="text-red-700">{formatCurrencyBRL(commissionCents)}</strong>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       <div className="rounded-2xl border border-red-200 bg-gradient-to-r from-red-50/60 to-white p-5">

@@ -1,8 +1,8 @@
 import { useState, type FormEvent } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { formatCurrencyBRL } from '../lib/domain';
-import { createServiceCategory, createSubservice } from '../services/repository';
+import { createServiceCategory, createSubservice, deleteSubservice } from '../services/repository';
 
 export default function CatalogPage() {
   const { workspace, refreshWorkspace } = useAuth();
@@ -10,6 +10,7 @@ export default function CatalogPage() {
   const [serviceId, setServiceId] = useState('');
   const [procName, setProcName] = useState('');
   const [priceReais, setPriceReais] = useState('150');
+  const [promoReais, setPromoReais] = useState('');
   const [duration, setDuration] = useState('90');
   const [maintDays, setMaintDays] = useState('20');
 
@@ -27,14 +28,24 @@ export default function CatalogPage() {
     e.preventDefault();
     const targetCat = serviceId || workspace.services[0]?.id;
     if (!targetCat || !procName.trim()) return;
+    const promoCents = promoReais.trim()
+      ? Math.round(parseFloat(promoReais.replace(',', '.')) * 100) || null
+      : null;
     await createSubservice(workspace, {
       service_id: targetCat,
       name: procName,
       price_cents: Math.round(parseFloat(priceReais.replace(',', '.')) * 100) || 0,
+      promo_price_cents: promoCents,
       duration_minutes: parseInt(duration, 10) || 60,
       maintenance_days: maintDays ? parseInt(maintDays, 10) : null,
     });
     setProcName('');
+    setPromoReais('');
+    await refreshWorkspace();
+  };
+
+  const handleRemoveSubservice = async (id: string) => {
+    await deleteSubservice(workspace, id);
     await refreshWorkspace();
   };
 
@@ -78,15 +89,21 @@ export default function CatalogPage() {
           className="rounded-xl border border-zinc-200 px-3 py-2 text-sm"
         />
         <input
-          type="number"
-          placeholder="Minutos"
-          value={duration}
-          onChange={(e) => setDuration(e.target.value)}
+          placeholder="Promo R$ (opcional)"
+          value={promoReais}
+          onChange={(e) => setPromoReais(e.target.value)}
           className="rounded-xl border border-zinc-200 px-3 py-2 text-sm"
         />
         <button type="submit" className="rounded-xl bg-red-700 px-4 py-2 text-sm font-semibold text-white hover:bg-red-800">
           Adicionar
         </button>
+        <input
+          type="number"
+          placeholder="Duração (min)"
+          value={duration}
+          onChange={(e) => setDuration(e.target.value)}
+          className="rounded-xl border border-zinc-200 px-3 py-2 text-sm"
+        />
         <input
           type="number"
           placeholder="Prazo manutenção (dias, ex: 20)"
@@ -111,7 +128,28 @@ export default function CatalogPage() {
                         {sub.duration_minutes} min{sub.maintenance_days ? ` · Manutenção ${sub.maintenance_days}d` : ''}
                       </p>
                     </div>
-                    <span className="font-bold text-red-700">{formatCurrencyBRL(sub.price_cents)}</span>
+                    <div className="flex items-center gap-2">
+                      <div className="text-right">
+                        {sub.promo_price_cents ? (
+                          <>
+                            <span className="mr-1.5 text-xs text-zinc-400 line-through">
+                              {formatCurrencyBRL(sub.price_cents)}
+                            </span>
+                            <span className="font-bold text-red-700">{formatCurrencyBRL(sub.promo_price_cents)}</span>
+                          </>
+                        ) : (
+                          <span className="font-bold text-red-700">{formatCurrencyBRL(sub.price_cents)}</span>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => void handleRemoveSubservice(sub.id)}
+                        className="rounded-lg p-1 text-zinc-400 hover:bg-red-50 hover:text-red-700"
+                        title="Remover procedimento"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
                   </div>
                 ))}
             </div>
