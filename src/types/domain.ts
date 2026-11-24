@@ -249,7 +249,10 @@ export const LASH_TECHNIQUES = [
 export const LASH_STYLES = ['Boneca', 'Esquilo', 'Gatinho', 'Gatão', 'Personalizado'] as const;
 export const LASH_CURLS = ['J', 'B', 'C', 'CC', 'D', 'DD', 'L', 'M'] as const;
 export const LASH_THICKNESSES = ['0.03', '0.05', '0.07', '0.10', '0.15', '0.20'] as const;
-export const LASH_LENGTHS = ['6mm', '7mm', '8mm', '9mm', '10mm', '11mm', '12mm', '13mm', '14mm', '15mm'] as const;
+export const LASH_LENGTHS = [
+  '5mm', '6mm', '7mm', '8mm', '9mm', '10mm', '11mm', '12mm',
+  '13mm', '14mm', '15mm', '16mm', '17mm', '18mm', '19mm', '20mm',
+] as const;
 
 export const ANAMNESIS_AREAS = [
   { id: 'lash_designer', label: 'Extensão de Cílios' },

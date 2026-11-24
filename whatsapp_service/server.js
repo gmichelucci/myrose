@@ -76,7 +76,7 @@ async function startWhatsApp() {
     }
   });
 
-  // Assistente B-IA integrada no WhatsApp (comandos rápidos)
+  // Assistente Rose IA integrada no WhatsApp (comandos rápidos)
   sock.ev.on('messages.upsert', async ({ messages, type }) => {
     if (type !== 'notify') return;
     for (const msg of messages) {
@@ -93,10 +93,10 @@ async function startWhatsApp() {
       if (!text.startsWith('!')) continue;
       const cmd = text.toLowerCase();
 
-      if (cmd === '!ajuda' || cmd === '!bia') {
+      if (cmd === '!ajuda' || cmd === '!rose') {
         await sock.sendMessage(remoteJid, {
           text:
-            '🌹 *Assistente B-IA — MyRose*\n\n' +
+            '🌹 *Assistente Rose IA — MyRose*\n\n' +
             'Comandos disponíveis:\n' +
             '• *!ajuda* — Exibe este menu\n' +
             '• *!painel* — Link direto do seu painel MyRose\n' +
@@ -164,7 +164,7 @@ app.get('/qrcode', (_req, res) => {
 <body>
   <div class="card">
     <h1>My<span>Rose</span> WhatsApp</h1>
-    <p class="sub">Servidor Local de Lembretes Automáticos & Assistente B-IA</p>
+    <p class="sub">Servidor Local de Lembretes Automáticos & Assistente Rose IA</p>
     <div id="content">Carregando...</div>
   </div>
   <script>

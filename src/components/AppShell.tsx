@@ -24,7 +24,7 @@ const NAV = [
   { to: '/catalogo', label: 'Catálogo', icon: Sparkles },
   { to: '/lash-mapping', label: 'Mapping & IA', icon: Eye },
   { to: '/financeiro', label: 'Financeiro & Estoque', icon: Wallet },
-  { to: '/automacoes', label: 'WhatsApp & B-IA', icon: MessageSquare },
+  { to: '/automacoes', label: 'WhatsApp & Rose IA', icon: MessageSquare },
   { to: '/configuracoes', label: 'Equipe & Config.', icon: Settings },
 ];
 

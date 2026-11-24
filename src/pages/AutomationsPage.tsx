@@ -95,9 +95,9 @@ export default function AutomationsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-zinc-950">Central WhatsApp, Lembretes & B-IA</h1>
+        <h1 className="text-2xl font-bold text-zinc-950">Automação WhatsApp, Lembretes & Rose IA</h1>
         <p className="text-sm text-zinc-500">
-          Servidor local de WhatsApp (QR Code), carteira de manutenção e modelos unificados.
+          Servidor local de WhatsApp (QR Code), carteira de manutenção e modelos inteligentes do MyRose.
         </p>
       </div>
 
@@ -108,7 +108,7 @@ export default function AutomationsPage() {
               <Bot className="h-5 w-5" />
             </div>
             <div>
-              <h2 className="font-bold text-zinc-950">Servidor Local WhatsApp & Assistente B-IA</h2>
+              <h2 className="font-bold text-zinc-950">Servidor Local WhatsApp & Assistente Rose IA</h2>
               <p className="text-xs text-zinc-600">
                 Status:{' '}
                 {waState.status === 'connected' ? (
@@ -162,7 +162,7 @@ export default function AutomationsPage() {
               <p className="mt-1">1. Abra o WhatsApp no celular → Aparelhos Conectados → Conectar Aparelho.</p>
               <p className="mt-1">2. Aponte a câmera para este QR Code.</p>
               <p className="mt-2 text-zinc-500">
-                Comandos da B-IA no WhatsApp conectado: <code className="font-mono">!ajuda</code>,{' '}
+                Comandos da Rose IA no WhatsApp conectado: <code className="font-mono">!ajuda</code>,{' '}
                 <code className="font-mono">!painel</code>, <code className="font-mono">!agendar</code>,{' '}
                 <code className="font-mono">!status</code>.
               </p>
@@ -171,7 +171,7 @@ export default function AutomationsPage() {
         )}
 
         <p className="mt-3 text-xs text-zinc-500">
-          Cota B-IA do plano {plan.name}: <strong>{plan.biaMonthlyLimit}</strong> mensagens/mês · Comandos B-IA ativos no WhatsApp:{' '}
+          Cota Rose IA do plano {plan.name}: <strong>{plan.biaMonthlyLimit}</strong> mensagens/mês · Comandos Rose IA ativos no WhatsApp:{' '}
           <code className="rounded bg-zinc-100 px-1.5 py-0.5 font-mono">!ajuda</code>{' '}
           <code className="rounded bg-zinc-100 px-1.5 py-0.5 font-mono">!painel</code>{' '}
           <code className="rounded bg-zinc-100 px-1.5 py-0.5 font-mono">!agendar</code>{' '}

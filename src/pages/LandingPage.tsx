@@ -21,7 +21,6 @@ export default function LandingPage() {
           </div>
           <nav className="hidden items-center gap-6 text-sm font-medium text-zinc-600 md:flex">
             <a href="#recursos" className="hover:text-red-700">Recursos</a>
-            <a href="#depoimentos" className="hover:text-red-700">Depoimentos</a>
             <a href="#precos" className="hover:text-red-700">Planos</a>
             <a href="#faq" className="hover:text-red-700">FAQ</a>
             <Link to="/agendar/studio-demo" className="hover:text-red-700">Ver Agendamento Online</Link>
@@ -74,16 +73,16 @@ export default function LandingPage() {
 
         <div className="mx-auto mt-12 grid max-w-3xl grid-cols-3 gap-4 border-t border-zinc-200 pt-8">
           <div>
-            <p className="text-2xl font-extrabold text-zinc-950 sm:text-3xl">+ de 12 mil</p>
-            <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-zinc-500">Profissionais de Estética</p>
+            <p className="text-2xl font-extrabold text-zinc-950 sm:text-3xl">24h Online</p>
+            <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-zinc-500">Agendamento Automático</p>
           </div>
           <div>
-            <p className="text-2xl font-extrabold text-red-700 sm:text-3xl">4.9/5 ★</p>
-            <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-zinc-500">Avaliação das Usuárias</p>
+            <p className="text-2xl font-extrabold text-red-700 sm:text-3xl">Zero Taxa</p>
+            <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-zinc-500">Sinal Pix Direto p/ Você</p>
           </div>
           <div>
-            <p className="text-2xl font-extrabold text-zinc-950 sm:text-3xl">+ de 360 mil</p>
-            <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-zinc-500">Clientes Agendadas</p>
+            <p className="text-2xl font-extrabold text-zinc-950 sm:text-3xl">Web & App</p>
+            <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-zinc-500">iPhone, Android e Desktop</p>
           </div>
         </div>
       </section>
@@ -97,8 +96,8 @@ export default function LandingPage() {
           },
           {
             icon: Eye,
-            title: 'Mapping + IA integrados',
-            desc: 'Desenhe o mapping da cliente em canvas vetorial leve com presets de 6mm a 15mm.',
+            title: 'Mapping + Visagismo IA',
+            desc: 'Desenhe o mapping sobre o molde ou foto do olho com numerações livres, curvaturas e estilos.',
           },
           {
             icon: ShieldCheck,
@@ -107,8 +106,8 @@ export default function LandingPage() {
           },
           {
             icon: MessageCircle,
-            title: 'Central WhatsApp & B-IA',
-            desc: 'Modelos prontos de confirmação, manutenção e resgate unificados em uma única tela.',
+            title: 'Automação WhatsApp & Rose IA',
+            desc: 'Modelos prontos de confirmação, manutenção e retorno unificados em um único painel.',
           },
         ].map((card) => {
           const Icon = card.icon;
@@ -191,7 +190,7 @@ export default function LandingPage() {
                   </li>
                   <li className="flex items-center gap-2">
                     <Check className="h-4 w-4 shrink-0" />
-                    {plan.biaMonthlyLimit > 0 ? `${plan.biaMonthlyLimit} msgs B-IA/mês` : 'Sem B-IA WhatsApp'}
+                    {plan.biaMonthlyLimit > 0 ? `${plan.biaMonthlyLimit} msgs Rose IA/mês` : 'Sem Rose IA WhatsApp'}
                   </li>
                   <li className="flex items-center gap-2">
                     <Check className="h-4 w-4 shrink-0" />
@@ -220,41 +219,6 @@ export default function LandingPage() {
               </div>
             );
           })}
-        </div>
-      </section>
-
-      <section id="depoimentos" className="mx-auto max-w-6xl px-4 py-14">
-        <div className="text-center">
-          <h2 className="text-3xl font-bold text-zinc-950">Quem usa no estúdio recomenda</h2>
-          <p className="mt-2 text-sm text-zinc-600">Profissionais de extensão de cílios, sobrancelhas e estética que automatizaram a rotina.</p>
-        </div>
-        <div className="mt-8 grid gap-5 md:grid-cols-3">
-          {[
-            {
-              name: 'Larissa Mendes',
-              role: 'Lash Designer · São Paulo/SP',
-              quote: 'Antes eu perdia 2 horas por noite respondendo horários no WhatsApp. Agora mando meu link do MyRose e a agenda enche sozinha com sinal Pix.',
-            },
-            {
-              name: 'Bianca Ferreira',
-              role: 'Studio Lash & Brow · Belo Horizonte/MG',
-              quote: 'O Lash Mapping com a foto da cliente no canvas e a carteira de manutenção de 15+ dias dobraram a taxa de retorno das minhas clientes.',
-            },
-            {
-              name: 'Fernanda Costa',
-              role: 'Estética & Micropigmentação · Curitiba/PR',
-              quote: 'Controlo a comissão das 3 colaboradoras, o estoque de fios e colas e a ficha de anamnese digital em um único painel pelo celular.',
-            },
-          ].map((t) => (
-            <div key={t.name} className="rounded-2xl border border-zinc-200 bg-zinc-50/60 p-6">
-              <p className="text-xs font-bold text-red-700">★★★★★</p>
-              <p className="mt-3 text-sm leading-relaxed text-zinc-700">“{t.quote}”</p>
-              <div className="mt-4 border-t border-zinc-200 pt-3">
-                <p className="text-sm font-bold text-zinc-950">{t.name}</p>
-                <p className="text-xs text-zinc-500">{t.role}</p>
-              </div>
-            </div>
-          ))}
         </div>
       </section>
 

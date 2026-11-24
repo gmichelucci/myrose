@@ -26,6 +26,7 @@ export default function LashMappingPage() {
   const [curl, setCurl] = useState<string>('C');
   const [thickness, setThickness] = useState('0.07');
   const [sizes, setSizes] = useState<string[]>(['8mm', '9mm', '10mm', '11mm', '12mm']);
+  const [customSize, setCustomSize] = useState('');
   const [adhesive, setAdhesive] = useState('');
   const [notes, setNotes] = useState('');
   const [color, setColor] = useState('#b91c1c');
@@ -270,9 +271,9 @@ export default function LashMappingPage() {
           </div>
 
           <div>
-            <p className="mb-1.5 text-xs font-semibold text-zinc-700">Numerações utilizadas (mm)</p>
+            <p className="mb-1.5 text-xs font-semibold text-zinc-700">Numerações utilizadas (qualquer medida em mm)</p>
             <div className="flex flex-wrap gap-1.5">
-              {LASH_LENGTHS.map((len) => {
+              {Array.from(new Set([...LASH_LENGTHS, ...sizes])).map((len) => {
                 const on = sizes.includes(len);
                 return (
                   <button
@@ -287,6 +288,27 @@ export default function LashMappingPage() {
                   </button>
                 );
               })}
+            </div>
+            <div className="mt-2 flex items-center gap-2">
+              <input
+                placeholder="Outra medida livre (ex: 21mm, 22mm, 25mm)"
+                value={customSize}
+                onChange={(e) => setCustomSize(e.target.value)}
+                className="w-56 rounded-lg border border-zinc-200 px-2.5 py-1 text-xs"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  const raw = customSize.trim();
+                  if (!raw) return;
+                  const formatted = raw.endsWith('mm') ? raw : `${raw}mm`;
+                  if (!sizes.includes(formatted)) setSizes((prev) => [...prev, formatted]);
+                  setCustomSize('');
+                }}
+                className="rounded-lg bg-zinc-900 px-2.5 py-1 text-xs font-semibold text-white hover:bg-zinc-800"
+              >
+                + Adicionar medida
+              </button>
             </div>
           </div>
 
