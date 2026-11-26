@@ -578,6 +578,33 @@ export async function updateAppointmentStatus(
   writeLocalState({ ...ws, appointments: next });
 }
 
+export async function rescheduleAppointment(
+  ws: StudioWorkspace,
+  appointmentId: string,
+  newDate: string,
+  newStartTime?: string
+): Promise<void> {
+  const appt = ws.appointments.find((a) => a.id === appointmentId);
+  if (!appt) return;
+  const duration = Math.max(15, toMinutes(appt.end_time) - toMinutes(appt.start_time));
+  const start = newStartTime ? newStartTime.slice(0, 5) : appt.start_time.slice(0, 5);
+  const end = toHHMM(toMinutes(start) + duration);
+
+  if (isSupabaseConfigured && supabase) {
+    const { error } = await supabase
+      .from('mr_appointments')
+      .update({ appointment_date: newDate, start_time: start, end_time: end })
+      .eq('id', appointmentId)
+      .eq('studio_id', ws.studio.id);
+    if (error) throw new Error(error.message);
+    return;
+  }
+  const next = ws.appointments.map((a) =>
+    a.id === appointmentId ? { ...a, appointment_date: newDate, start_time: start, end_time: end } : a
+  );
+  writeLocalState({ ...ws, appointments: next });
+}
+
 export async function createLashMapping(
   ws: StudioWorkspace,
   input: Omit<LashMapping, 'id' | 'studio_id' | 'created_at'>
